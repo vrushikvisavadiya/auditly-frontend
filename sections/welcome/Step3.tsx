@@ -14,22 +14,27 @@ interface Step3Props {
 // Custom Toggle Button Component for Yes/No
 interface ToggleButtonProps {
   question: string;
+  description?: string;
   value: boolean | null;
   onChange: (value: boolean) => void;
   onPrevious?: () => void;
   showPrevious?: boolean;
+  isFirstQuestion?: boolean;
   previousQuestion?: {
     text: string;
+    description?: string;
     answer: boolean | null;
   };
 }
 
 function YesNoToggle({
   question,
+  description,
   value,
   onChange,
   onPrevious,
   showPrevious,
+  isFirstQuestion,
   previousQuestion,
 }: ToggleButtonProps) {
   return (
@@ -37,9 +42,14 @@ function YesNoToggle({
       {/* Show previous question if available */}
       {previousQuestion && (
         <div className="mb-8 opacity-50">
-          <h3 className="text-lg font-medium text-gray-500 mb-4">
+          <h3 className="text-lg font-medium text-gray-500 mb-2">
             {previousQuestion.text}
           </h3>
+          {previousQuestion.description && (
+            <p className="text-sm text-gray-400 mb-4">
+              {previousQuestion.description}
+            </p>
+          )}
           <div className="flex gap-3">
             <button
               type="button"
@@ -74,15 +84,23 @@ function YesNoToggle({
             onClick={onPrevious}
             className="flex items-center gap-2 text-[var(--auditly-dark-blue)] hover:text-[var(--auditly-orange)] transition-colors"
           >
-            <Icon name="arrow_upward" className="text-sm" />
+            <Icon
+              name={isFirstQuestion ? "arrow_back" : "arrow_upward"}
+              className="text-sm"
+            />
             <span className="text-sm">Previous</span>
           </button>
         </div>
       )}
 
-      <h3 className="text-lg font-medium text-[var(--auditly-dark-blue)] mb-4">
+      {/* Current Question */}
+      <h3 className="text-lg font-medium text-[var(--auditly-dark-blue)] mb-2">
         {question}
       </h3>
+
+      {description && (
+        <p className="text-sm text-gray-600 mb-4">{description}</p>
+      )}
 
       <div className="flex gap-3">
         <button
@@ -117,34 +135,42 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
   const formData = useAppSelector((state) => state.welcome.formData[3] || {});
 
   const [data, setData] = useState({
-    // understandServices: formData.understandServices || null,
-    // transportParticipants: formData.transportParticipants || null,
-    // supportParticipantsWithBehaviour:
-    //   formData.supportParticipantsWithBehaviour || null,
-    // provideFundingSupport: formData.provideFundingSupport || null,
+    understandServices: formData.understandServices || null,
+    transportParticipants: formData.transportParticipants || null,
+    supportParticipantsWithBehaviour:
+      formData.supportParticipantsWithBehaviour || null,
+    provideFundingSupport: formData.provideFundingSupport || null,
     ...formData,
   });
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   console.log("currentQuestionIndex: ", currentQuestionIndex);
 
-  // Questions data
+  // Questions data with proper structure
   const questions = [
     {
       id: "understandServices",
-      text: "Do you administer medications to your participants?",
+      text: "Help Us Understand Your Services",
+      question: "Do you administer medications to your participants?",
+      description: "Includes tablets, injections, or creams.",
     },
     {
       id: "transportParticipants",
       text: "Do you handle hazardous waste like dirty gloves, bodily fluids, or cleaning chemicals?",
+      question:
+        "Do you handle hazardous waste like dirty gloves, bodily fluids, or cleaning chemicals?",
     },
     {
       id: "supportParticipantsWithBehaviour",
       text: "Do you support participants who have a Behaviour Support Plan in place?",
+      question:
+        "Do you support participants who have a Behaviour Support Plan in place?",
     },
     {
       id: "provideFundingSupport",
       text: "Do you provide complex nursing supports (PEG feeding, bowel care, etc.)?",
+      question:
+        "Do you provide complex nursing supports (PEG feeding, bowel care, etc.)?",
     },
   ];
 
@@ -161,7 +187,7 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
       }
-    }, 500); // Small delay to show the selection
+    }, 500);
   };
 
   const handlePreviousQuestion = () => {
@@ -208,7 +234,11 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
     if (currentQuestionIndex > 0) {
       const prevQuestion = questions[currentQuestionIndex - 1];
       return {
-        text: prevQuestion.text,
+        text:
+          currentQuestionIndex === 1
+            ? prevQuestion.text
+            : prevQuestion.question,
+        description: prevQuestion.description,
         answer: data[prevQuestion.id],
       };
     }
@@ -227,7 +257,7 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
           <div className="flex items-center gap-2 mb-6">
             <button
               onClick={() => setCurrentQuestionIndex(questions.length - 1)}
-              className="flex items-center gap-2 text-[var(--auditly-dark-blue)] hover:text-[var(--auditly-dark-blue)] transition-colors"
+              className="flex items-center gap-2 text-[var(--auditly-dark-blue)] hover:text-[var(--auditly-orange)] transition-colors"
             >
               <Icon name="arrow_upward" className="text-sm" />
               <span className="text-sm">Previous</span>
@@ -264,18 +294,24 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
   }
 
   const currentQuestion = questions[currentQuestionIndex];
-  const previousQuestion = getPreviousQuestion();
+  const prevQ = getPreviousQuestion() ?? undefined;
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 min-h-[calc(100vh-200px)]">
       <div className="space-y-6">
         <YesNoToggle
-          question={currentQuestion.text}
+          question={
+            currentQuestionIndex === 0
+              ? currentQuestion.text
+              : currentQuestion.question
+          }
+          description={currentQuestion.description}
           value={data[currentQuestion.id]}
           onChange={(value) => handleAnswerChange(currentQuestion.id, value)}
           onPrevious={handlePreviousQuestion}
           showPrevious={true}
-          previousQuestion={previousQuestion}
+          isFirstQuestion={currentQuestionIndex === 0}
+          previousQuestion={prevQ}
         />
       </div>
     </div>

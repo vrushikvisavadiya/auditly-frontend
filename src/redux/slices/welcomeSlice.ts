@@ -1,4 +1,3 @@
-// store/welcomeSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 // Define specific interfaces for each step's data
@@ -9,17 +8,17 @@ interface Step1Data {
 
 interface Step2Data {
   providerType: string;
-  operatingStates: string;
+  operatingStates: Array<{ name: string; id: string }>;
   businessDescription?: string;
   registrationNumber?: string;
-  registrationGroups?: string;
-  // data: any;
+  registrationGroups?: Array<{ name: string; id: string }>;
 }
 
 interface Step3Data {
-  services: string[];
-  primaryService: string;
-  serviceDescription?: string;
+  understandServices?: boolean | null;
+  transportParticipants?: boolean | null;
+  supportParticipantsWithBehaviour?: boolean | null;
+  provideFundingSupport?: boolean | null;
 }
 
 interface Step4Data {
@@ -80,11 +79,12 @@ const welcomeSlice = createSlice({
         state.completedSteps.push(action.payload);
       }
     },
-    updateFormData: <T extends keyof StepFormData>(
-      state: WelcomeState,
-      action: PayloadAction<{ step: T; data: StepFormData[T] }>
+    updateFormData: (
+      state,
+      action: PayloadAction<{ step: keyof StepFormData; data: any }>
     ) => {
-      state.formData[action.payload.step] = action.payload.data;
+      const { step, data } = action.payload;
+      state.formData[step] = data;
     },
     resetWelcome: (state) => {
       state.currentStep = 1;
