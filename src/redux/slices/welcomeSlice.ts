@@ -8,10 +8,12 @@ interface Step1Data {
 }
 
 interface Step2Data {
-  businessName: string;
-  businessType: string;
+  providerType: string;
+  operatingStates: string;
   businessDescription?: string;
   registrationNumber?: string;
+  registrationGroups?: string;
+  // data: any;
 }
 
 interface Step3Data {

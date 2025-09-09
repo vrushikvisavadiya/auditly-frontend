@@ -5,6 +5,7 @@ import { setCurrentStep } from "@/src/redux/slices/welcomeSlice";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Step1 from "@/sections/welcome/Step1";
+import Step2 from "./Step2";
 // Import other step components as you create them
 // import Step2 from "@/sections/welcome/Step2";
 // import Step3 from "@/sections/welcome/Step3";
@@ -51,14 +52,11 @@ export default function StepProgress() {
       case 1:
         return <Step1 onNext={() => handleStepChange(2)} />;
       case 2:
-        // return <Step2 onNext={() => handleStepChange(3)} onPrev={() => handleStepChange(1)} />;
         return (
-          <div className="text-center py-20">
-            <h2 className="text-2xl font-semibold text-gray-600 mb-4">
-              Step 2: Organisation Discovery
-            </h2>
-            <p className="text-gray-500">Coming Soon...</p>
-          </div>
+          <Step2
+            onNext={() => handleStepChange(3)}
+            onPrev={() => handleStepChange(1)}
+          />
         );
       case 3:
         // return <Step3 onNext={() => handleStepChange(4)} onPrev={() => handleStepChange(2)} />;
@@ -184,7 +182,7 @@ export default function StepProgress() {
       </div>
 
       {/* Step Content */}
-      <div className="bg-gray-50 min-h-[calc(100vh-180px)]">
+      <div className="bg-white min-h-[calc(100vh-180px)]">
         {renderStepContent()}
       </div>
     </div>
