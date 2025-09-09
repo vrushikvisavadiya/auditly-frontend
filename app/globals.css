@@ -1,0 +1,73 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+:root {
+  --auditly-dark-blue: #1a204c;
+  --auditly-light-blue: #5878bb;
+  --auditly-orange: #f5846a;
+
+  font-family: "Montserrat";
+}
+
+.auditly-input {
+  @apply input w-full px-3 border border-solid border-[rgba(88,120,187,0.20)] placeholder-[#5878BB];
+}
+
+.tab-active {
+  @apply bg-[var(--auditly-dark-blue)];
+}
+
+.thead {
+  @apply rounded-tl-2xl rounded-tr-2xl [background:linear-gradient(0deg,rgba(88,120,187,0.10)_0%,rgba(88,120,187,0.10)_100%),#FFF] px-3 py-2 border-b-[rgba(88,120,187,0.10)] border-b border-solid;
+}
+
+.thead > tr > th {
+  @apply text-black [font-family:Poppins] text-base font-semibold leading-[normal];
+}
+.thead > tr > th:first-child {
+  @apply rounded-tl-lg;
+}
+
+.thead > tr > th:last-child {
+  @apply rounded-tr-lg;
+}
+
+.table-zebra > tbody > tr {
+  @apply px-3 border-b-[rgba(88,120,187,0.10)] border-b border-solid;
+}
+
+.table-zebra > tbody > tr:nth-child(even) {
+  @apply [background:linear-gradient(0deg,rgba(88,120,187,0.03)_0%,rgba(88,120,187,0.03)_100%),#FFF];
+}
+
+.table-zebra > tbody > tr > td {
+  @apply text-black [font-family:Poppins] text-sm font-normal leading-[normal];
+}
+
+.filled-icon {
+  font-variation-settings: "FILL" 1;
+}
+
+.breadcrumbs > ul > li::before {
+  @apply opacity-100;
+}
+
+.btn-dark-blue {
+  @apply bg-[var(--auditly-dark-blue)] hover:bg-[#2F3A6B] text-white;
+}
+
+.btn-light-blue {
+  @apply bg-[var(--auditly-light-blue)] hover:bg-[#496AB0] text-white;
+}
+
+.btn-orange {
+  @apply bg-[var(--auditly-orange)] hover:bg-[#E67258] text-white;
+}
+
+.btn-green {
+  @apply bg-[#28A745] hover:bg-[#219C3D] text-white;
+}
+
+.btn-white {
+  @apply bg-[white] hover:bg-[#DEE5F2] text-[var(--auditly-dark-blue)];
+}
