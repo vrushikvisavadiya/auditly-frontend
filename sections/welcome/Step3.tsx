@@ -1,0 +1,283 @@
+// sections/welcome/Step3.tsx
+"use client";
+import Button from "@/components/Button";
+import Icon from "@/components/Icon";
+import { useAppDispatch, useAppSelector } from "@/src/redux/hooks";
+import { completeStep, updateFormData } from "@/src/redux/slices/welcomeSlice";
+import { useState } from "react";
+
+interface Step3Props {
+  onNext: () => void;
+  onPrev: () => void;
+}
+
+// Custom Toggle Button Component for Yes/No
+interface ToggleButtonProps {
+  question: string;
+  value: boolean | null;
+  onChange: (value: boolean) => void;
+  onPrevious?: () => void;
+  showPrevious?: boolean;
+  previousQuestion?: {
+    text: string;
+    answer: boolean | null;
+  };
+}
+
+function YesNoToggle({
+  question,
+  value,
+  onChange,
+  onPrevious,
+  showPrevious,
+  previousQuestion,
+}: ToggleButtonProps) {
+  return (
+    <div className="pt-10">
+      {/* Show previous question if available */}
+      {previousQuestion && (
+        <div className="mb-8 opacity-50">
+          <h3 className="text-lg font-medium text-gray-500 mb-4">
+            {previousQuestion.text}
+          </h3>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              disabled
+              className={`px-6 py-2 rounded-lg font-semibold ${
+                previousQuestion.answer === false
+                  ? "btn-orange text-white"
+                  : "bg-gray-200 text-gray-500"
+              }`}
+            >
+              ❌ No
+            </button>
+            <button
+              type="button"
+              disabled
+              className={`px-6 py-2 rounded-lg font-semibold ${
+                previousQuestion.answer === true
+                  ? "btn-dark-blue text-white"
+                  : "bg-gray-200 text-gray-500"
+              }`}
+            >
+              ✅ Yes{" "}
+            </button>
+          </div>
+          <p className="text-sm text-gray-400 mt-2">String value</p>
+        </div>
+      )}
+
+      {showPrevious && onPrevious && (
+        <div className="flex items-center gap-2 mb-6">
+          <button
+            onClick={onPrevious}
+            className="flex items-center gap-2 text-[var(--auditly-dark-blue)] hover:text-[var(--auditly-orange)] transition-colors"
+          >
+            <Icon name="arrow_upward" className="text-sm" />
+            <span className="text-sm">Previous</span>
+          </button>
+        </div>
+      )}
+
+      <h3 className="text-lg font-medium text-[var(--auditly-dark-blue)] mb-4">
+        {question}
+      </h3>
+
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+            value === false
+              ? "btn-orange text-white focus:ring-orange-500"
+              : "btn-orange text-gray-700 hover:bg-gray-300 focus:ring-gray-500"
+          }`}
+        >
+          ❌ No
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+            value === true
+              ? "btn-dark-blue text-white focus:ring-blue-500"
+              : "btn-dark-blue text-gray-700 hover:bg-gray-300 focus:ring-gray-500"
+          }`}
+        >
+          ✅ Yes{" "}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function Step3({ onNext, onPrev }: Step3Props) {
+  const dispatch = useAppDispatch();
+  const formData = useAppSelector((state) => state.welcome.formData[3] || {});
+
+  const [data, setData] = useState({
+    // understandServices: formData.understandServices || null,
+    // transportParticipants: formData.transportParticipants || null,
+    // supportParticipantsWithBehaviour:
+    //   formData.supportParticipantsWithBehaviour || null,
+    // provideFundingSupport: formData.provideFundingSupport || null,
+    ...formData,
+  });
+
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  console.log("currentQuestionIndex: ", currentQuestionIndex);
+
+  // Questions data
+  const questions = [
+    {
+      id: "understandServices",
+      text: "Do you administer medications to your participants?",
+    },
+    {
+      id: "transportParticipants",
+      text: "Do you handle hazardous waste like dirty gloves, bodily fluids, or cleaning chemicals?",
+    },
+    {
+      id: "supportParticipantsWithBehaviour",
+      text: "Do you support participants who have a Behaviour Support Plan in place?",
+    },
+    {
+      id: "provideFundingSupport",
+      text: "Do you provide complex nursing supports (PEG feeding, bowel care, etc.)?",
+    },
+  ];
+
+  const handleAnswerChange = (questionId: string, value: boolean) => {
+    const newData = {
+      ...data,
+      [questionId]: value,
+    };
+
+    setData(newData);
+
+    // Auto-advance to next question after answering
+    setTimeout(() => {
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+      }
+    }, 500); // Small delay to show the selection
+  };
+
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    } else {
+      // If on first question, go back to previous step
+      onPrev();
+    }
+  };
+
+  const handleNext = () => {
+    dispatch(completeStep(3));
+    dispatch(updateFormData({ step: 3, data }));
+    onNext();
+  };
+
+  const isAllQuestionsAnswered = () => {
+    return questions.every((q) => data[q.id] !== null);
+  };
+
+  const getPolicyPackages = () => {
+    return [
+      {
+        id: "core-4.3",
+        name: "Core 4.3 – Medication",
+        selected: true,
+      },
+      {
+        id: "core-4.4",
+        name: "Core 4.4 – Waste Management",
+        selected: true,
+      },
+      {
+        id: "module-2a",
+        name: "Module 2a – Behaviour Support",
+        selected: true,
+      },
+    ];
+  };
+
+  // Get previous question data
+  const getPreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      const prevQuestion = questions[currentQuestionIndex - 1];
+      return {
+        text: prevQuestion.text,
+        answer: data[prevQuestion.id],
+      };
+    }
+    return null;
+  };
+
+  // Show policy package summary after all questions are answered
+  if (
+    isAllQuestionsAnswered() &&
+    currentQuestionIndex + 1 >= questions.length
+  ) {
+    return (
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 min-h-[calc(100vh-200px)]">
+        {/* Policy Package Summary */}
+        <div className="">
+          <div className="flex items-center gap-2 mb-6">
+            <button
+              onClick={() => setCurrentQuestionIndex(questions.length - 1)}
+              className="flex items-center gap-2 text-[var(--auditly-dark-blue)] hover:text-[var(--auditly-dark-blue)] transition-colors"
+            >
+              <Icon name="arrow_upward" className="text-sm" />
+              <span className="text-sm">Previous</span>
+            </button>
+          </div>
+
+          <h3 className="text-xl font-semibold text-[var(--auditly-dark-blue)] mb-6">
+            Your Policy Package so far:
+          </h3>
+
+          <div className="space-y-4">
+            {getPolicyPackages().map((pkg) => (
+              <div key={pkg.id} className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                  <Icon name="check" className="text-white text-xs" />
+                </div>
+                <span className="text-gray-700 text-base">{pkg.name}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 flex justify-end">
+            <Button
+              onClick={handleNext}
+              iconRight={<Icon name="arrow_forward" />}
+              className="px-8 py-3 bg-[var(--auditly-dark-blue)] text-white hover:bg-[var(--auditly-orange)] transition-colors"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const previousQuestion = getPreviousQuestion();
+
+  return (
+    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 min-h-[calc(100vh-200px)]">
+      <div className="space-y-6">
+        <YesNoToggle
+          question={currentQuestion.text}
+          value={data[currentQuestion.id]}
+          onChange={(value) => handleAnswerChange(currentQuestion.id, value)}
+          onPrevious={handlePreviousQuestion}
+          showPrevious={true}
+          previousQuestion={previousQuestion}
+        />
+      </div>
+    </div>
+  );
+}
