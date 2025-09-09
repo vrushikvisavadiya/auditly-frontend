@@ -20,6 +20,7 @@ interface ToggleButtonProps {
   onPrevious?: () => void;
   showPrevious?: boolean;
   isFirstQuestion?: boolean;
+  data?: any;
   previousQuestion?: {
     text: string;
     description?: string;
@@ -36,6 +37,7 @@ function YesNoToggle({
   showPrevious,
   isFirstQuestion,
   previousQuestion,
+  data,
 }: ToggleButtonProps) {
   return (
     <div className="pt-10">
@@ -77,7 +79,6 @@ function YesNoToggle({
           <p className="text-sm text-gray-400 mt-2">String value</p>
         </div>
       )}
-
       {showPrevious && onPrevious && (
         <div className="flex items-center gap-2 mb-6">
           <button
@@ -93,15 +94,18 @@ function YesNoToggle({
         </div>
       )}
 
+      {isFirstQuestion && (
+        <h3 className="text-xl font-medium text-[var(--auditly-dark-blue)] mb-2">
+          {data?.text}
+        </h3>
+      )}
       {/* Current Question */}
       <h3 className="text-lg font-medium text-[var(--auditly-dark-blue)] mb-2">
         {question}
       </h3>
-
       {description && (
         <p className="text-sm text-gray-600 mb-4">{description}</p>
       )}
-
       <div className="flex gap-3">
         <button
           type="button"
@@ -234,10 +238,7 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
     if (currentQuestionIndex > 0) {
       const prevQuestion = questions[currentQuestionIndex - 1];
       return {
-        text:
-          currentQuestionIndex === 1
-            ? prevQuestion.text
-            : prevQuestion.question,
+        text: prevQuestion.question,
         description: prevQuestion.description,
         answer: data[prevQuestion.id],
       };
@@ -300,9 +301,10 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
     <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 min-h-[calc(100vh-200px)]">
       <div className="space-y-6">
         <YesNoToggle
+          data={currentQuestion}
           question={
             currentQuestionIndex === 0
-              ? currentQuestion.text
+              ? currentQuestion.question
               : currentQuestion.question
           }
           description={currentQuestion.description}
