@@ -4,6 +4,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 // Define specific interfaces for each step's data
 interface Step1Data {
   welcomed: boolean;
+  textContent: string;
 }
 
 interface Step2Data {
