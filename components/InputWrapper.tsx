@@ -11,7 +11,7 @@ export default function InputWrapper(props: InputWrapperProps) {
   return (
     <fieldset className="fieldset w-full py-0 gap-2!">
       {/* Label */}
-      <legend className="fieldset-legend w-full text-[color:var(--auditly-dark-blue)] text-base font-semibold leading-[normal]">
+      <legend className="fieldset-legend w-full mb-1 text-[color:var(--auditly-dark-blue)] text-base font-semibold leading-[normal]">
         {props.label}
         {props.topRightElement}
       </legend>

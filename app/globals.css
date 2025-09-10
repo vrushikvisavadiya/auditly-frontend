@@ -10,7 +10,7 @@
 }
 
 .auditly-input {
-  @apply input w-full px-3 border border-solid border-[rgba(88,120,187,0.20)] placeholder-[#5878BB];
+  @apply rounded-[8px] input w-full px-3  border border-solid border-[rgba(88,120,187,0.10)] placeholder-[#5878BB];
 }
 
 .tab-active {

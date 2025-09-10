@@ -29,7 +29,7 @@ export default function ExternalLayout(props: ExternalLayoutProps) {
       </div>
 
       {/* Right side */}
-      <div className="flex flex-col items-start justify-center-safe gap-[30px] px-4 md:px-8 lg:px-16 py-12 lg:py-18 xl:py-24 overflow-y-auto w-full md:w-[550px]">
+      <div className="flex flex-col items-start justify-center-safe gap-[30px] px-4 md:px-8 lg:px-16 py-12 lg:py-18 xl:py-24 overflow-y-auto w-full md:max-w-[550px]">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="180"

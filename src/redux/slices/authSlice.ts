@@ -173,6 +173,44 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+export const resetPassword = createAsyncThunk(
+  "auth/resetPassword",
+  async (
+    {
+      token,
+      newPassword,
+      confirmPassword,
+    }: {
+      token: string;
+      newPassword: string;
+      confirmPassword: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/accounts/reset-password/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token, newPassword, confirmPassword }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        return rejectWithValue(error.message || "Failed to reset password");
+      }
+
+      return await response.json();
+    } catch (error) {
+      return rejectWithValue("Network error occurred");
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -208,6 +246,19 @@ const authSlice = createSlice({
         state.registrationStatus = "failed";
         state.registrationError =
           (action.payload as string) || "Sign up failed";
+      })
+      // Reset Password
+      .addCase(resetPassword.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.status = "idle";
+        state.error = null;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.status = "idle";
+        state.error = action.payload as string;
       });
   },
 });
