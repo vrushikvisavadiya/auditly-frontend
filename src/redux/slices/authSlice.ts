@@ -1,4 +1,5 @@
 // src/redux/slices/authSlice.ts
+import { authService } from "@/src/api/auth";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 type LoginPayload = { email: string; password: string };
@@ -45,7 +46,6 @@ type ApiLoginResponse = {
   };
 };
 
-// Add proper type for forgot password response
 type ApiForgotPasswordResponse = {
   success: boolean;
   message: string;
@@ -76,7 +76,7 @@ type AuthState = {
   registrationMessage: string | null;
   registrationInfo: RegistrationInfo | null;
 
-  // forgot password flow - ADD THESE FIELDS
+  // forgot password flow
   forgotPasswordStatus: "idle" | "loading" | "succeeded" | "failed";
   forgotPasswordError: string | null;
   forgotPasswordMessage: string | null;
@@ -93,46 +93,31 @@ const initialState: AuthState = {
   registrationMessage: null,
   registrationInfo: null,
 
-  // ADD THESE INITIAL VALUES
   forgotPasswordStatus: "idle",
   forgotPasswordError: null,
   forgotPasswordMessage: null,
 };
 
+// Updated thunks using authService
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
-  async ({ email, password }: LoginPayload, { rejectWithValue }) => {
+  async (payload: LoginPayload, { rejectWithValue }) => {
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/accounts/login/`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      );
-
-      const json = (await res
-        .json()
-        .catch(() => null)) as ApiLoginResponse | null;
-
-      if (!res.ok || !json) {
-        return rejectWithValue(json?.message || "Login failed");
-      }
+      const data = await authService.login(payload);
 
       const mapped = {
-        accessToken: json.tokens.access,
-        refreshToken: json.tokens.refresh,
-        accessExpiresAt: json.tokens.access_expires_at,
-        refreshExpiresAt: json.tokens.refresh_expires_at,
+        accessToken: data.tokens.access,
+        refreshToken: data.tokens.refresh,
+        accessExpiresAt: data.tokens.access_expires_at,
+        refreshExpiresAt: data.tokens.refresh_expires_at,
         user: {
-          id: json.user.id,
-          email: json.user.email,
-          firstName: json.user.firstName,
-          lastName: json.user.lastName,
-          platformRole: json.user.platform_role,
-          mustChangePassword: json.user.must_change_password,
-          isActive: json.user.is_active,
+          id: data.user.id,
+          email: data.user.email,
+          firstName: data.user.firstName,
+          lastName: data.user.lastName,
+          platformRole: data.user.platform_role,
+          mustChangePassword: data.user.must_change_password,
+          isActive: data.user.is_active,
         } as User,
       };
 
@@ -149,8 +134,10 @@ export const loginUser = createAsyncThunk(
       }
 
       return mapped;
-    } catch (e: any) {
-      return rejectWithValue(e?.message || "Network error");
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Login failed"
+      );
     }
   }
 );
@@ -159,29 +146,15 @@ export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async (payload: SignupPayload, { rejectWithValue }) => {
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/accounts/signup/`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const json = (await res
-        .json()
-        .catch(() => null)) as ApiSignupResponse | null;
-
-      if (!res.ok || !json?.success) {
-        return rejectWithValue(json?.message || "Sign up failed");
-      }
-
+      const data = await authService.signup(payload);
       return {
-        message: json.message,
-        info: json.data,
+        message: data.message,
+        info: data.data,
       };
-    } catch (e: any) {
-      return rejectWithValue(e?.message || "Network error");
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Sign up failed"
+      );
     }
   }
 );
@@ -203,28 +176,19 @@ export const resetPasswordWithToken = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/accounts/reset-password/?uid=${uid}&token=${token}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            new_password: newPassword,
-            confirm_password: confirmPassword,
-          }),
-        }
+      const data = await authService.resetPasswordWithToken({
+        uid,
+        token,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to reset password"
       );
-
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || "Failed to reset password");
-      }
-
-      return await response.json();
-    } catch (error) {
-      return rejectWithValue("Network error occurred");
     }
   }
 );
@@ -241,62 +205,34 @@ export const resetPassword = createAsyncThunk(
     },
     { rejectWithValue }
   ) => {
-    const authToken = localStorage.getItem("accessToken");
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/accounts/change-password-first-login/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: JSON.stringify({
-            new_password: newPassword,
-            confirm_password: confirmPassword,
-          }),
-        }
+      const data = await authService.changePasswordFirstLogin({
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to reset password"
       );
-
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || "Failed to reset password");
-      }
-
-      return await response.json();
-    } catch (error) {
-      return rejectWithValue("Network error occurred");
     }
   }
 );
 
-// FIXED FORGOT PASSWORD THUNK
 export const forgotPassword = createAsyncThunk(
   "auth/forgotPassword",
   async ({ email }: { email: string }, { rejectWithValue }) => {
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/accounts/forgot-password/`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
+      const data = await authService.forgotPassword(email);
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to send reset link"
       );
-
-      // Parse JSON once
-      const json = (await res
-        .json()
-        .catch(() => null)) as ApiForgotPasswordResponse | null;
-
-      if (!res.ok) {
-        return rejectWithValue(json?.message || "Failed to send reset link");
-      }
-
-      // Return the parsed JSON, not res.json() again
-      return json;
-    } catch (e: any) {
-      return rejectWithValue(e?.message || "Network error");
     }
   }
 );
@@ -310,6 +246,15 @@ const authSlice = createSlice({
       state.accessToken = null;
       state.status = "idle";
       state.error = null;
+
+      // Clear localStorage
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("accessExpiresAt");
+        localStorage.removeItem("refreshExpiresAt");
+        localStorage.removeItem("user");
+      }
     },
     resetRegistration(state) {
       state.registrationStatus = "idle";
@@ -321,6 +266,26 @@ const authSlice = createSlice({
       state.forgotPasswordStatus = "idle";
       state.forgotPasswordError = null;
       state.forgotPasswordMessage = null;
+    },
+    // Add hydration action for SSR/client sync
+    hydrateAuth(state) {
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("accessToken");
+        const userStr = localStorage.getItem("user");
+
+        if (token && userStr) {
+          try {
+            const user = JSON.parse(userStr);
+            state.accessToken = token;
+            state.user = { id: user.id, email: user.email };
+            state.status = "succeeded";
+          } catch (error) {
+            // Clear invalid data
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("user");
+          }
+        }
+      }
     },
   },
   extraReducers: (builder) => {
@@ -404,6 +369,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, resetRegistration, resetForgotPassword } =
+export const { logout, resetRegistration, resetForgotPassword, hydrateAuth } =
   authSlice.actions;
 export default authSlice.reducer;

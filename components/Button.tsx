@@ -6,27 +6,48 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   href?: string;
 }
 
-export default function Button(props: ButtonProps) {
+export default function Button({
+  children,
+  iconRight,
+  iconLeft,
+  className,
+  href,
+  onClick,
+  disabled,
+  type,
+  ...rest
+}: ButtonProps) {
   const content = (
     <>
-      {props.iconLeft}
-      {props.children}
-      {props.iconRight}
+      {iconLeft}
+      {children}
+      {iconRight}
     </>
   );
-  const className = `flex items-center gap-2 
+
+  const buttonClassName = `flex items-center gap-2 
     px-3 py-2 w-fit text-sm 
     btn btn-dark-blue 
     border-none shadow-none rounded-lg
-    ${props.className}`;
+    ${className}`;
 
-  if (props.href) {
+  if (href) {
     return (
-      <a href={props.href} className={className}>
+      <a href={href} className={buttonClassName}>
         {content}
       </a>
     );
   } else {
-    return <button className={className}>{content}</button>;
+    return (
+      <button
+        className={buttonClassName}
+        onClick={onClick}
+        disabled={disabled}
+        type={type}
+        {...rest}
+      >
+        {content}
+      </button>
+    );
   }
 }

@@ -8,20 +8,38 @@ import Step1 from "@/sections/welcome/Step1";
 import Step2 from "./Step2";
 import Step3 from "./Step3";
 import Step4 from "./Step4";
-// Import other step components as you create them
-// import Step2 from "@/sections/welcome/Step2";
-// import Step3 from "@/sections/welcome/Step3";
-// import Step4 from "@/sections/welcome/Step4";
-// import Step5 from "@/sections/welcome/Step5";
-// import Step6 from "@/sections/welcome/Step6";
 
 const steps = [
-  { id: 1, title: "Welcome & Basics", description: "Getting started" },
-  { id: 2, title: "Organisation Discovery", description: "Your business info" },
-  { id: 3, title: "Services", description: "What you offer" },
-  { id: 4, title: "Key Roles and Structure", description: "Team setup" },
-  { id: 5, title: "Personalisation", description: "Customize settings" },
-  { id: 6, title: "Review", description: "Final overview" },
+  {
+    id: 1,
+    title: "Welcome & Basics",
+    shortTitle: "Welcome",
+  },
+  {
+    id: 2,
+    title: "Organisation Discovery",
+    shortTitle: "Discovery",
+  },
+  {
+    id: 3,
+    title: "Services",
+    shortTitle: "Services",
+  },
+  {
+    id: 4,
+    title: "Key Roles and Structure",
+    shortTitle: "Roles",
+  },
+  {
+    id: 5,
+    title: "Personalisation",
+    shortTitle: "Settings",
+  },
+  {
+    id: 6,
+    title: "Review",
+    shortTitle: "Review",
+  },
 ];
 
 export default function StepProgress() {
@@ -67,22 +85,13 @@ export default function StepProgress() {
             onPrev={() => handleStepChange(2)}
           />
         );
-      // return (
-      //   <div className="text-center py-20">
-      //     <h2 className="text-2xl font-semibold text-gray-600 mb-4">
-      //       Step 3: Services
-      //     </h2>
-      //     <p className="text-gray-500">Coming Soon...</p>
-      //   </div>
-      // );
       case 4:
         return (
           <Step4
-            onNext={() => handleStepChange(4)}
-            onPrev={() => handleStepChange(2)}
+            onNext={() => handleStepChange(5)}
+            onPrev={() => handleStepChange(3)}
           />
         );
-
       case 5:
         return (
           <div className="text-center py-20">
@@ -107,90 +116,152 @@ export default function StepProgress() {
   };
 
   return (
-    <div>
-      {/* Step Progress Bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between">
-            {steps.map((step, index) => {
-              const isActive = currentStep === step.id;
-              const isCompleted = completedSteps.includes(step.id);
-              const isPassed = currentStep > step.id;
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Header - Side by Side */}
+      <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">
+              Step {currentStep} of {steps.length}
+            </h3>
+          </div>
+          <div>
+            <span className="text-xs font-medium text-gray-600">
+              {steps[currentStep - 1]?.title}
+            </span>
+          </div>
+        </div>
 
-              return (
-                <div key={step.id} className="flex items-center">
-                  {/* Step Circle and Content */}
-                  <div className="flex items-center">
-                    {/* Step Number Circle */}
-                    <div
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
+          <div
+            className="bg-[#FF7F7F] h-2 rounded-full transition-all duration-300 ease-in-out"
+            style={{ width: `${(currentStep / steps.length) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Desktop Step Progress - Circle First, then Title */}
+      <div className="hidden lg:block bg-white border-b border-gray-200 px-6 py-4">
+        <div className="max-w-6xl mx-auto">
+          <nav aria-label="Progress">
+            <ol className="flex items-center justify-between">
+              {steps.map((step) => {
+                const isActive = currentStep === step.id;
+                const isCompleted = completedSteps.includes(step.id);
+                const isPassed = currentStep > step.id;
+
+                return (
+                  <li
+                    key={step.id}
+                    className="flex items-center cursor-pointer"
+                  >
+                    {/* Step Circle */}
+                    <button
+                      type="button"
                       className={`
-                        w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold cursor-pointer
+                        w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2
                         ${
                           isActive
-                            ? "bg-[#FF7F7F] text-white"
+                            ? "bg-[#FF7F7F] text-white focus:ring-[#FF7F7F]"
                             : isCompleted || isPassed
-                            ? "bg-green-500 text-white"
-                            : "bg-gray-300 text-gray-600 font-semibold"
+                            ? "bg-green-500 text-white focus:ring-green-500"
+                            : "bg-gray-300 text-gray-600 focus:ring-gray-400"
                         }
-                        transition-all duration-200 hover:scale-105
                       `}
                       onClick={() => handleStepChange(step.id)}
+                      aria-label={`Go to ${step.title}`}
                     >
-                      {isCompleted || isPassed ? "✓" : step.id}
-                    </div>
+                      {isCompleted || isPassed ? (
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      ) : (
+                        step.id
+                      )}
+                    </button>
 
-                    {/* Step Title */}
-                    <div className="ml-3">
-                      <div
-                        className={`text-sm font-medium cursor-pointer hover:text-[var(--auditly-dark-blue)] transition-colors ${
-                          isActive
-                            ? "text-[var(--auditly-dark-blue)]"
-                            : isCompleted || isPassed
-                            ? "text-gray-700"
-                            : "text-gray-500"
-                        }`}
-                        onClick={() => handleStepChange(step.id)}
-                      >
-                        {step.title}
-                      </div>
-                    </div>
-                  </div>
+                    {/* Step Title - Right next to circle */}
+                    <button
+                      type="button"
+                      className={`ml-3 text-left cursor-pointer hover:text-[var(--auditly-dark-blue)] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF7F7F] rounded px-2 py-1 ${
+                        isActive
+                          ? "text-[var(--auditly-dark-blue)]"
+                          : isCompleted || isPassed
+                          ? "text-gray-700"
+                          : "text-gray-500"
+                      }`}
+                      onClick={() => handleStepChange(step.id)}
+                    >
+                      <div className="text-sm font-medium">{step.title}</div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+        </div>
+      </div>
 
-                  {/* Connector Line */}
-                  {index < steps.length - 1 && (
-                    <div className="flex-1 mx-4">
-                      <div className="h-px bg-gray-200 relative">
-                        <div
-                          className={`h-full transition-all duration-300 ${
-                            currentStep > step.id
-                              ? "bg-green-500"
-                              : currentStep === step.id
-                              ? "bg-[#FF7F7F]"
-                              : "bg-gray-200"
-                          }`}
-                          style={{
-                            width:
-                              currentStep > step.id
-                                ? "100%"
-                                : currentStep === step.id
-                                ? "50%"
-                                : "0%",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+      {/* Tablet Progress (md to lg) - Side by Side Header */}
+      <div className="hidden md:block lg:hidden bg-white border-b border-gray-200 px-4 py-3">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">
+              Step {currentStep} of {steps.length}
+            </h3>
           </div>
+          <div>
+            <span className="text-xs font-medium text-gray-600">
+              {steps[currentStep - 1]?.title}
+            </span>
+          </div>
+        </div>
+
+        {/* Horizontal Step Indicators */}
+        <div className="flex items-center justify-center space-x-4">
+          {steps.map((step) => {
+            const isActive = currentStep === step.id;
+            const isCompleted = completedSteps.includes(step.id);
+            const isPassed = currentStep > step.id;
+
+            return (
+              <button
+                key={step.id}
+                type="button"
+                className={`
+                  w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2
+                  ${
+                    isActive
+                      ? "bg-[#FF7F7F] text-white focus:ring-[#FF7F7F]"
+                      : isCompleted || isPassed
+                      ? "bg-green-500 text-white focus:ring-green-500"
+                      : "bg-gray-300 text-gray-600 focus:ring-gray-400"
+                  }
+                `}
+                onClick={() => handleStepChange(step.id)}
+                aria-label={`Go to ${step.title}`}
+              >
+                {isCompleted || isPassed ? "✓" : step.id}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Step Content */}
-      <div className="bg-white min-h-[calc(100vh-180px)]">
-        {renderStepContent()}
-      </div>
+      <div className="bg-white">{renderStepContent()}</div>
     </div>
   );
 }

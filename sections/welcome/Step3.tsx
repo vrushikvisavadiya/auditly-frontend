@@ -1,4 +1,3 @@
-// sections/welcome/Step3.tsx
 "use client";
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
@@ -73,12 +72,12 @@ function YesNoToggle({
                   : "bg-gray-200 text-gray-500"
               }`}
             >
-              ✅ Yes{" "}
+              ✅ Yes
             </button>
           </div>
-          <p className="text-sm text-gray-400 mt-2">String value</p>
         </div>
       )}
+
       {showPrevious && onPrevious && (
         <div className="flex items-center gap-2 mb-6">
           <button
@@ -99,6 +98,7 @@ function YesNoToggle({
           {data?.text}
         </h3>
       )}
+
       {/* Current Question */}
       <h3 className="text-lg font-medium text-[var(--auditly-dark-blue)] mb-2">
         {question}
@@ -106,6 +106,7 @@ function YesNoToggle({
       {description && (
         <p className="text-sm text-gray-600 mb-4">{description}</p>
       )}
+
       <div className="flex gap-3">
         <button
           type="button"
@@ -127,7 +128,7 @@ function YesNoToggle({
               : "btn-dark-blue text-gray-700 hover:bg-gray-300 focus:ring-gray-500"
           }`}
         >
-          ✅ Yes{" "}
+          ✅ Yes
         </button>
       </div>
     </div>
@@ -156,7 +157,7 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
   });
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  console.log("currentQuestionIndex: ", currentQuestionIndex);
+  const [showSummary, setShowSummary] = useState(false);
 
   // Questions data with proper structure
   const questions = [
@@ -198,17 +199,40 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
     setTimeout(() => {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
+      } else {
+        // Show summary after all questions are answered
+        setShowSummary(true);
       }
     }, 500);
   };
 
   const handlePreviousQuestion = () => {
+    console.log("Previous clicked, current index:", currentQuestionIndex);
+
+    if (showSummary) {
+      // From summary, go back to last question
+      console.log("Going back from summary to last question");
+      setShowSummary(false);
+      setCurrentQuestionIndex(questions.length - 1);
+      return;
+    }
+
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     } else {
       // If on first question, go back to previous step
       onPrev();
     }
+  };
+
+  // FIXED: Handle previous from summary
+  const handlePreviousFromSummary = () => {
+    console.log("Going back from summary to last question");
+    setShowSummary(false);
+    // Use setTimeout to ensure state update processes
+    setTimeout(() => {
+      setCurrentQuestionIndex(questions.length - 1);
+    }, 0);
   };
 
   const handleNext = () => {
@@ -256,17 +280,18 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
 
   // Show policy package summary after all questions are answered
   if (
-    isAllQuestionsAnswered() &&
-    currentQuestionIndex + 1 >= questions.length
+    showSummary ||
+    (isAllQuestionsAnswered() && currentQuestionIndex >= questions.length)
   ) {
     return (
       <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 min-h-[calc(100vh-200px)]">
         {/* Policy Package Summary */}
-        <div className="">
+        <div>
           <div className="flex items-center gap-2 mb-6">
             <button
-              onClick={() => setCurrentQuestionIndex(questions.length - 1)}
+              onClick={handlePreviousFromSummary}
               className="flex items-center gap-2 text-[var(--auditly-dark-blue)] hover:text-[var(--auditly-orange)] transition-colors"
+              type="button"
             >
               <Icon name="arrow_upward" className="text-sm" />
               <span className="text-sm">Previous</span>
@@ -309,12 +334,9 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
     <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 min-h-[calc(100vh-200px)]">
       <div className="space-y-6">
         <YesNoToggle
+          key={currentQuestionIndex} // Force re-render on index change
           data={currentQuestion}
-          question={
-            currentQuestionIndex === 0
-              ? currentQuestion.question
-              : currentQuestion.question
-          }
+          question={currentQuestion.question}
           description={currentQuestion.description}
           value={data[currentQuestion.id]}
           onChange={(value) => handleAnswerChange(currentQuestion.id, value)}
