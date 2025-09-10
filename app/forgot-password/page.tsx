@@ -4,29 +4,53 @@ import Button from "@/components/Button";
 import ExternalLayout from "@/components/ExternalLayout";
 import InputWrapper from "@/components/InputWrapper";
 import { SuccessToast } from "@/components/Toast";
+import { forgotPassword } from "@/src/redux/slices/authSlice";
+import { useAppDispatch, useAppSelector } from "@/src/redux/hooks";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
-  const [emailSent] = useState(false);
+  const dispatch = useAppDispatch();
+  const { forgotPasswordStatus, forgotPasswordError, forgotPasswordMessage } =
+    useAppSelector((s) => s.auth);
 
-  function handleSubmit(event: React.FormEvent) {
+  const [email, setEmail] = useState("");
+
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    toast((t) => (
-      <SuccessToast
-        t={t}
-        title="Reset password link sent!"
-        description="A message is sent to your email address for confirmation of password reset"
-      />
-    ));
+
+    if (!email) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    const result = await dispatch(forgotPassword({ email: email.trim() }));
+    console.log("result: ", result);
+
+    if (forgotPassword.fulfilled.match(result)) {
+      toast((t) => (
+        <SuccessToast
+          t={t}
+          title="Reset password link sent!"
+          description={
+            forgotPasswordMessage ||
+            "A message is sent to your email address for confirmation of password reset"
+          }
+        />
+      ));
+    } else {
+      toast.error(forgotPasswordError || "Failed to send reset link");
+    }
   }
 
   const inputClass = "auditly-input";
+  const isLoading = forgotPasswordStatus === "loading";
+  const emailSent = forgotPasswordStatus === "succeeded";
+
   return (
     <ExternalLayout
       title="Forgot Password?"
-      subtitle="Please enter the email address you’d like your password reset information sent to"
+      subtitle="Please enter the email address you'd like your password reset information sent to"
       aboveTitleComponent={
         emailSent && (
           <div
@@ -40,18 +64,19 @@ export default function ForgotPassword() {
       }
     >
       <form className="flex flex-col gap-2.5 w-full" onSubmit={handleSubmit}>
-        <InputWrapper
-          label="Email Address"
-          // errorMessage="This field is required"
-        >
+        <InputWrapper label="Email Address">
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={inputClass}
             placeholder="you@example.com"
+            required
+            autoComplete="email"
+            disabled={isLoading}
           />
         </InputWrapper>
+
         <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4">
           <a
             href="/signup"
@@ -59,10 +84,16 @@ export default function ForgotPassword() {
           >
             Create an account
           </a>
-          <Button type="submit" disabled={!email}>
-            Request Reset Link
+          <Button type="submit" disabled={!email || isLoading}>
+            {isLoading ? "Sending..." : "Request Reset Link"}
           </Button>
         </div>
+
+        {forgotPasswordError && forgotPasswordStatus === "failed" && (
+          <p className="text-red-600 text-sm mt-2" role="alert">
+            {forgotPasswordError}
+          </p>
+        )}
       </form>
     </ExternalLayout>
   );

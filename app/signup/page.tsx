@@ -1,8 +1,6 @@
-// app/signup/page.tsx
 "use client";
 
 import { useState, useEffect, FormEvent } from "react";
-
 import Button from "@/components/Button";
 import ExternalLayout from "@/components/ExternalLayout";
 import Icon from "@/components/Icon";
@@ -79,7 +77,9 @@ export default function Signup() {
     const dlg = document.getElementById(
       "signup-success"
     ) as HTMLDialogElement | null;
-    dlg?.close();
+    if (dlg) {
+      dlg.close();
+    }
     dispatch(resetRegistration());
   }
 
@@ -181,9 +181,10 @@ export default function Signup() {
         title="Registration Submitted"
         description={
           registrationMessage ||
-          "Your application is under review. You’ll get an email with your login link to set your password once approved."
+          "Your application is under review. You'll get an email with your login link to set your password once approved."
         }
         header={<CheckModalHeader />}
+        onClose={handleCloseModal}
       >
         <div className="space-y-3">
           {registrationInfo && (

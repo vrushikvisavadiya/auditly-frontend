@@ -4,9 +4,22 @@ interface ModalProps {
   description: string;
   header: React.ReactNode;
   children?: React.ReactNode;
+  onClose?: () => void;
 }
 
 export default function Modal(props: ModalProps) {
+  const handleClose = () => {
+    const dialog = document.getElementById(
+      props.id
+    ) as HTMLDialogElement | null;
+    if (dialog) {
+      dialog.close();
+    }
+    if (props.onClose) {
+      props.onClose();
+    }
+  };
+
   return (
     <dialog id={props.id} className="modal modal-bottom sm:modal-middle">
       <div className="modal-box rounded-t-2xl sm:rounded-2xl p-0">
@@ -21,8 +34,8 @@ export default function Modal(props: ModalProps) {
           {props.children}
         </div>
       </div>
-      <form method="dialog" className="modal-backdrop">
-        <button>close</button>
+      <form method="dialog" className="modal-backdrop" onClick={handleClose}>
+        <button type="button">close</button>
       </form>
     </dialog>
   );

@@ -138,7 +138,15 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
   const dispatch = useAppDispatch();
   const formData = useAppSelector((state) => state.welcome.formData[3] || {});
 
-  const [data, setData] = useState({
+  type DataType = {
+    [key: string]: boolean | null;
+    understandServices: boolean | null;
+    transportParticipants: boolean | null;
+    supportParticipantsWithBehaviour: boolean | null;
+    provideFundingSupport: boolean | null;
+  };
+
+  const [data, setData] = useState<DataType>({
     understandServices: formData.understandServices || null,
     transportParticipants: formData.transportParticipants || null,
     supportParticipantsWithBehaviour:

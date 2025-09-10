@@ -28,6 +28,15 @@ export default function Login() {
           description="You’re now signed in and ready to go."
         />
       ));
+      console.log("res: ", res, res?.payload.user);
+
+      if (res?.payload.user?.mustChangePassword) {
+        // Redirect to change password page if required
+        window.location.href = "/reset-password";
+      } else {
+        // Redirect to dashboard or home page
+        window.location.href = "/welcome";
+      }
       // optional: redirect with next/navigation
       // router.push("/dashboard");
     } else {
