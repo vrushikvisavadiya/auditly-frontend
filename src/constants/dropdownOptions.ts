@@ -60,3 +60,32 @@ export const suggestedRegistrationGroups: OptionType[] = [
   { id: "0136", name: "0136 - Therapeutic Supports" },
   { id: "0122", name: "0122 - Specialist Support Coordination" },
 ];
+
+export const organizationOptions = {
+  organizationSize: [
+    { value: "sole-trader", label: "Sole Trader" },
+    { value: "small-team", label: "Small Team (1-5 staff)" },
+    { value: "medium-team", label: "Medium Team (6-20 staff)" },
+    { value: "large-team", label: "Large Team (21+ staff)" },
+    { value: "corporation", label: "Corporation" },
+    { value: "not-for-profit", label: "Not for Profit" },
+  ],
+  frontlineStaffTitle: [
+    { value: "workers", label: "Workers" },
+    { value: "support-workers", label: "Support Workers" },
+    { value: "care-workers", label: "Care Workers" },
+    { value: "clinicians", label: "Clinicians" },
+    { value: "therapists", label: "Therapists" },
+    { value: "nurses", label: "Nurses" },
+    { value: "support-staff", label: "Support Staff" },
+  ],
+  seniorStaffTitle: [
+    { value: "ceo", label: "CEO" },
+    { value: "director", label: "Director" },
+    { value: "owner", label: "Owner" },
+    { value: "manager", label: "Manager" },
+    { value: "chairperson", label: "Chairperson" },
+    { value: "principal", label: "Principal" },
+    { value: "coordinator", label: "Coordinator" },
+  ],
+};

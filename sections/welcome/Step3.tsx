@@ -334,7 +334,7 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
     <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 min-h-[calc(100vh-200px)]">
       <div className="space-y-6">
         <YesNoToggle
-          key={currentQuestionIndex} // Force re-render on index change
+          key={currentQuestionIndex}
           data={currentQuestion}
           question={currentQuestion.question}
           description={currentQuestion.description}
