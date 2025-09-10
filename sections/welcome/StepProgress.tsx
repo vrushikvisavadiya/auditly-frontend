@@ -8,6 +8,8 @@ import Step1 from "@/sections/welcome/Step1";
 import Step2 from "./Step2";
 import Step3 from "./Step3";
 import Step4 from "./Step4";
+import Step6 from "./Step6";
+// import Step5 from "./Step5";
 
 const steps = [
   {
@@ -66,6 +68,10 @@ export default function StepProgress() {
     router.push(`/welcome?step=${step}`);
   };
 
+  const handleCompleted = () => {
+    console.log("handleCompleted");
+  };
+
   // Render the appropriate step component
   const renderStepContent = () => {
     switch (currentStep) {
@@ -93,6 +99,12 @@ export default function StepProgress() {
           />
         );
       case 5:
+        // return (
+        //   <Step5
+        //     onNext={() => handleStepChange(5)}
+        //     onPrev={() => handleStepChange(3)}
+        //   />
+        // );
         return (
           <div className="text-center py-20">
             <h2 className="text-2xl font-semibold text-gray-600 mb-4">
@@ -103,12 +115,10 @@ export default function StepProgress() {
         );
       case 6:
         return (
-          <div className="text-center py-20">
-            <h2 className="text-2xl font-semibold text-gray-600 mb-4">
-              Step 6: Review
-            </h2>
-            <p className="text-gray-500">Coming Soon...</p>
-          </div>
+          <Step6
+            onNext={() => handleCompleted()}
+            onPrev={() => handleStepChange(3)}
+          />
         );
       default:
         return <Step1 onNext={() => handleStepChange(2)} />;
