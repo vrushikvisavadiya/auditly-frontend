@@ -9,6 +9,7 @@ import Step2 from "./Step2";
 import Step3 from "./Step3";
 import Step4 from "./Step4";
 import Step6 from "./Step6";
+import Step5 from "./Step5";
 // import Step5 from "./Step5";
 
 const steps = [
@@ -99,12 +100,12 @@ export default function StepProgress() {
           />
         );
       case 5:
-        // return (
-        //   <Step5
-        //     onNext={() => handleStepChange(5)}
-        //     onPrev={() => handleStepChange(3)}
-        //   />
-        // );
+        return (
+          <Step5
+            onNext={() => handleStepChange(5)}
+            onPrev={() => handleStepChange(3)}
+          />
+        );
         return (
           <div className="text-center py-20">
             <h2 className="text-2xl font-semibold text-gray-600 mb-4">
@@ -126,7 +127,7 @@ export default function StepProgress() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       {/* Mobile Header - Side by Side */}
       <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
