@@ -22,13 +22,9 @@ interface Step3Data {
 }
 
 interface Step4Data {
-  teamSize: number;
-  keyRoles: Array<{
-    title: string;
-    name: string;
-    responsibilities: string[];
-  }>;
-  organizationStructure: string;
+  organizationSize?: string | null;
+  frontlineStaffTitle?: string | null;
+  seniorStaffTitle?: string | null;
 }
 
 interface Step5Data {

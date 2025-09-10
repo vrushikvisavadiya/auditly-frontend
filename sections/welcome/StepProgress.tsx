@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import Step1 from "@/sections/welcome/Step1";
 import Step2 from "./Step2";
 import Step3 from "./Step3";
+import Step4 from "./Step4";
 // Import other step components as you create them
 // import Step2 from "@/sections/welcome/Step2";
 // import Step3 from "@/sections/welcome/Step3";
@@ -76,13 +77,12 @@ export default function StepProgress() {
       // );
       case 4:
         return (
-          <div className="text-center py-20">
-            <h2 className="text-2xl font-semibold text-gray-600 mb-4">
-              Step 4: Key Roles and Structure
-            </h2>
-            <p className="text-gray-500">Coming Soon...</p>
-          </div>
+          <Step4
+            onNext={() => handleStepChange(4)}
+            onPrev={() => handleStepChange(2)}
+          />
         );
+
       case 5:
         return (
           <div className="text-center py-20">
