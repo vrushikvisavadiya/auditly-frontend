@@ -18,11 +18,27 @@ export default function Step6({ onNext, onPrev }: Step6Props) {
 
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Extract data from all previous steps
-  const step2Data = formData[2] || {};
-  const step3Data = formData[3] || {};
-  const step4Data = formData[4] || {};
-  const step5Data = formData[5] || {};
+  // Extract data from all previous steps with proper defaults
+  const step2Data = (formData[2] as any) || {
+    providerType: "",
+    operatingStates: [],
+    registrationGroups: [],
+  };
+
+  const step3Data = (formData[3] as any) || {
+    understandServices: null,
+    transportParticipants: null,
+    supportParticipantsWithBehaviour: null,
+  };
+
+  const step4Data = (formData[4] as any) || {
+    seniorStaffTitle: "",
+    frontlineStaffTitle: "",
+  };
+
+  const step5Data = (formData[5] as any) || {
+    stylePreference: "",
+  };
 
   const handleReviewAgain = () => {
     onPrev();
@@ -50,15 +66,15 @@ export default function Step6({ onNext, onPrev }: Step6Props) {
   };
 
   // Format states for display
-  const formatStates = (states: any[]) => {
+  const formatStates = (states: any) => {
     if (!Array.isArray(states)) return "Not specified";
-    return states.map((state) => state.name || state).join(", ");
+    return states.map((state: any) => state.name || state).join(", ");
   };
 
   // Format registration groups for display
-  const formatRegistrationGroups = (groups: any[]) => {
+  const formatRegistrationGroups = (groups: any) => {
     if (!Array.isArray(groups)) return "Not specified";
-    return groups.map((group) => group.name || group).join(", ");
+    return groups.map((group: any) => group.name || group).join(", ");
   };
 
   // Generate policies list based on selections
@@ -83,7 +99,7 @@ export default function Step6({ onNext, onPrev }: Step6Props) {
 
   // Get style preference display text
   const getStyleText = () => {
-    const style = step5Data?.stylePreference;
+    const style = step5Data.stylePreference;
     switch (style) {
       case "government":
         return "Government-style (very formal)";
@@ -151,7 +167,7 @@ export default function Step6({ onNext, onPrev }: Step6Props) {
             <div className="grid grid-cols-2 gap-4">
               <div className="font-medium text-gray-900">Provider Type</div>
               <div className="text-gray-700">
-                {step2Data?.providerType || "Not specified"}
+                {step2Data.providerType || "Not specified"}
               </div>
             </div>
           </div>
@@ -163,7 +179,7 @@ export default function Step6({ onNext, onPrev }: Step6Props) {
                 States you operate in
               </div>
               <div className="text-gray-700">
-                {formatStates(step2Data?.operatingStates)}
+                {formatStates(step2Data.operatingStates)}
               </div>
             </div>
           </div>
@@ -175,7 +191,7 @@ export default function Step6({ onNext, onPrev }: Step6Props) {
                 Registration Groups
               </div>
               <div className="text-gray-700">
-                {formatRegistrationGroups(step2Data?.registrationGroups)}
+                {formatRegistrationGroups(step2Data.registrationGroups)}
               </div>
             </div>
           </div>
@@ -236,9 +252,9 @@ export default function Step6({ onNext, onPrev }: Step6Props) {
         <div className="flex flex-wrap gap-4">
           <Button
             onClick={handleReviewAgain}
-            className="px-6 py-3 btn-orange text-white hover:bg-[var(--auditly-orange)]/90 transition-colors"
+            className="px-6 py-3 bg-[var(--auditly-orange)] text-white hover:bg-[var(--auditly-orange)]/90 transition-colors"
           >
-            🔍 Review again
+            ← Review again
           </Button>
 
           <Button
@@ -252,34 +268,11 @@ export default function Step6({ onNext, onPrev }: Step6Props) {
                 Generating...
               </>
             ) : (
-              <>✅ Yes, generate my policies</>
+              <>✅ Yes, generate my policies!</>
             )}
           </Button>
         </div>
       </motion.div>
-
-      {/* Additional Info */}
-      {/* <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.3 }}
-        className="bg-blue-50 border border-blue-200 rounded-lg p-4"
-      >
-        <div className="flex items-start gap-3">
-          <Icon name="info" className="text-blue-500 text-lg mt-0.5" />
-          <div>
-            <h4 className="font-semibold text-blue-900 mb-1">
-              What happens next?
-            </h4>
-            <p className="text-blue-700 text-sm">
-              We&apos;ll generate your customized policy documents based on your
-              selections. This process typically takes 2-3 minutes. You&apos;ll
-              be able to review, edit, and download your policies once
-              they&apos;re ready.
-            </p>
-          </div>
-        </div>
-      </motion.div> */}
     </motion.div>
   );
 }

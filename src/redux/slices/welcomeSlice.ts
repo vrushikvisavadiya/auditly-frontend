@@ -27,13 +27,14 @@ interface Step4Data {
   seniorStaffTitle?: string | null;
 }
 
+// Fixed Step5Data interface
 interface Step5Data {
-  preferences: {
-    notifications: boolean;
-    dashboard: string;
-    theme: string;
-  };
-  customSettings: Record<string, string | number | boolean>;
+  stylePreference?: string | null;
+  styleExample?: string | null;
+  styleDescription?: string;
+  hasStyleGuide?: boolean;
+  styleGuideFile?: File | null;
+  headerColor?: string;
 }
 
 interface Step6Data {
@@ -57,10 +58,89 @@ interface WelcomeState {
   formData: StepFormData;
 }
 
+// Enhanced initial state with default values
 const initialState: WelcomeState = {
   currentStep: 1,
   completedSteps: [],
-  formData: {},
+  formData: {
+    1: {
+      welcomed: false,
+      textContent: "",
+    },
+    2: {
+      providerType: "",
+      operatingStates: [],
+      businessDescription: "",
+      registrationGroups: [],
+    },
+    3: {
+      understandServices: null,
+      transportParticipants: null,
+      supportParticipantsWithBehaviour: null,
+      provideFundingSupport: null,
+    },
+    4: {
+      organizationSize: null,
+      frontlineStaffTitle: null,
+      seniorStaffTitle: null,
+    },
+    5: {
+      stylePreference: null,
+      styleExample: null,
+      styleDescription: "",
+      hasStyleGuide: false,
+      styleGuideFile: null,
+      headerColor: "#FF784B",
+    },
+    6: {
+      reviewCompleted: false,
+      finalComments: "",
+    },
+  },
+};
+
+// Default step data for proper initialization
+const getDefaultStepData = (step: keyof StepFormData) => {
+  switch (step) {
+    case 1:
+      return { welcomed: false, textContent: "" };
+    case 2:
+      return {
+        providerType: "",
+        operatingStates: [],
+        businessDescription: "",
+        registrationGroups: [],
+      };
+    case 3:
+      return {
+        understandServices: null,
+        transportParticipants: null,
+        supportParticipantsWithBehaviour: null,
+        provideFundingSupport: null,
+      };
+    case 4:
+      return {
+        organizationSize: null,
+        frontlineStaffTitle: null,
+        seniorStaffTitle: null,
+      };
+    case 5:
+      return {
+        stylePreference: null,
+        styleExample: null,
+        styleDescription: "",
+        hasStyleGuide: false,
+        styleGuideFile: null,
+        headerColor: "#FF784B",
+      };
+    case 6:
+      return {
+        reviewCompleted: false,
+        finalComments: "",
+      };
+    default:
+      return {};
+  }
 };
 
 const welcomeSlice = createSlice({
@@ -75,17 +155,26 @@ const welcomeSlice = createSlice({
         state.completedSteps.push(action.payload);
       }
     },
+    // Fixed updateFormData with proper type handling
     updateFormData: (
       state,
       action: PayloadAction<{ step: keyof StepFormData; data: any }>
     ) => {
       const { step, data } = action.payload;
-      state.formData[step] = data;
+
+      // Ensure the step exists in formData with proper default data
+      if (!state.formData[step]) {
+        state.formData[step] = getDefaultStepData(step) as any;
+      }
+
+      // Merge the new data with existing data
+      state.formData[step] = {
+        ...state.formData[step],
+        ...data,
+      };
     },
     resetWelcome: (state) => {
-      state.currentStep = 1;
-      state.completedSteps = [];
-      state.formData = {};
+      return initialState;
     },
   },
 });
@@ -103,4 +192,5 @@ export type {
   Step5Data,
   Step6Data,
   StepFormData,
+  WelcomeState,
 };

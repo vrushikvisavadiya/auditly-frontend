@@ -102,7 +102,7 @@ export default function StepProgress() {
       case 5:
         return (
           <Step5
-            onNext={() => handleStepChange(5)}
+            onNext={() => handleStepChange(6)}
             onPrev={() => handleStepChange(3)}
           />
         );
