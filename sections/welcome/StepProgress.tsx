@@ -1,16 +1,16 @@
 // components/welcome/StepProgress.tsx
 "use client";
 import { useAppSelector, useAppDispatch } from "@/src/redux/hooks";
-import { setCurrentStep } from "@/src/redux/slices/welcomeSlice";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { setCurrentStep, resetWelcome } from "@/src/redux/slices/welcomeSlice";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Step1 from "@/sections/welcome/Step1";
 import Step2 from "./Step2";
 import Step3 from "./Step3";
 import Step4 from "./Step4";
-import Step6 from "./Step6";
 import Step5 from "./Step5";
-// import Step5 from "./Step5";
+import Step6 from "./Step6";
+import LeaveOnboardingModal from "@/components/ui/LeaveOnboardingModal";
 
 const steps = [
   {
@@ -48,29 +48,105 @@ const steps = [
 export default function StepProgress() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { currentStep, completedSteps } = useAppSelector(
     (state) => state.welcome
   );
 
-  // Sync URL params with Redux state
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Set unsaved changes flag when user progresses past step 1
   useEffect(() => {
-    const step = searchParams.get("step");
-    const stepNumber = step ? parseInt(step) : 1;
+    setHasUnsavedChanges(currentStep > 1);
+  }, [currentStep]);
 
-    if (stepNumber >= 1 && stepNumber <= 6 && stepNumber !== currentStep) {
-      dispatch(setCurrentStep(stepNumber));
-    }
-  }, [searchParams, dispatch, currentStep]);
+  // Handle ONLY browser close/reload with minimal default dialog
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        event.preventDefault();
+        event.returnValue = "";
+        return "";
+      }
+    };
 
-  // Update URL when step changes
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
+  // Handle ONLY browser back/forward buttons with custom modal
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (hasUnsavedChanges) {
+        // Prevent the navigation
+        window.history.pushState(null, "", window.location.pathname);
+        // Show our custom modal
+        setShowLeaveModal(true);
+      }
+    };
+
+    // Push initial state
+    window.history.pushState(null, "", window.location.pathname);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [hasUnsavedChanges]);
+
+  // Handle step changes - Allow clicking on any completed step or adjacent step
   const handleStepChange = (step: number) => {
-    dispatch(setCurrentStep(step));
-    router.push(`/welcome?step=${step}`);
+    // Allow navigation to:
+    // 1. Current step (no change)
+    // 2. Previous steps (already completed)
+    // 3. Next step if current step is completed
+    // 4. Adjacent steps (prev/next)
+
+    if (
+      step === currentStep || // Same step
+      step < currentStep || // Previous step
+      completedSteps.includes(currentStep) || // Current step is completed
+      step === currentStep + 1 || // Next step
+      step === currentStep - 1 // Previous step
+    ) {
+      dispatch(setCurrentStep(step));
+      return;
+    }
+
+    // For non-accessible steps, don't show modal, just ignore the click
+    // This prevents jumping to future steps that haven't been unlocked
+    return;
   };
 
   const handleCompleted = () => {
-    console.log("handleCompleted");
+    // Mark as completed - no more warnings needed
+    setHasUnsavedChanges(false);
+    console.log("Onboarding completed!");
+    router.push("/dashboard");
+  };
+
+  // Custom modal handlers (only for browser navigation)
+  const handleLeaveAnyway = () => {
+    setHasUnsavedChanges(false);
+    dispatch(resetWelcome());
+    setShowLeaveModal(false);
+    router.push("/"); // Navigate away from onboarding
+  };
+
+  const handleStayAndFinish = () => {
+    setShowLeaveModal(false);
+  };
+
+  // Check if a step is accessible
+  const isStepAccessible = (stepId: number) => {
+    return (
+      stepId <= currentStep || // Current or previous steps
+      completedSteps.includes(stepId - 1) || // Previous step is completed
+      completedSteps.includes(currentStep) // Current step is completed
+    );
   };
 
   // Render the appropriate step component
@@ -103,22 +179,14 @@ export default function StepProgress() {
         return (
           <Step5
             onNext={() => handleStepChange(6)}
-            onPrev={() => handleStepChange(3)}
+            onPrev={() => handleStepChange(4)}
           />
-        );
-        return (
-          <div className="text-center py-20">
-            <h2 className="text-2xl font-semibold text-gray-600 mb-4">
-              Step 5: Personalisation
-            </h2>
-            <p className="text-gray-500">Coming Soon...</p>
-          </div>
         );
       case 6:
         return (
           <Step6
             onNext={() => handleCompleted()}
-            onPrev={() => handleStepChange(3)}
+            onPrev={() => handleStepChange(5)}
           />
         );
       default:
@@ -127,8 +195,8 @@ export default function StepProgress() {
   };
 
   return (
-    <div className="min-h-screen ">
-      {/* Mobile Header - Side by Side */}
+    <div className="min-h-screen">
+      {/* Mobile Header */}
       <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
           <div>
@@ -152,7 +220,7 @@ export default function StepProgress() {
         </div>
       </div>
 
-      {/* Desktop Step Progress - Circle First, then Title */}
+      {/* Desktop Step Progress */}
       <div className="hidden lg:block bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-6xl mx-auto">
           <nav aria-label="Progress">
@@ -161,26 +229,27 @@ export default function StepProgress() {
                 const isActive = currentStep === step.id;
                 const isCompleted = completedSteps.includes(step.id);
                 const isPassed = currentStep > step.id;
+                const isAccessible = isStepAccessible(step.id);
 
                 return (
-                  <li
-                    key={step.id}
-                    className="flex items-center cursor-pointer"
-                  >
+                  <li key={step.id} className="flex items-center">
                     {/* Step Circle */}
                     <button
                       type="button"
+                      disabled={!isAccessible}
                       className={`
-                        w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2
+                        w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2
                         ${
                           isActive
-                            ? "bg-[#FF7F7F] text-white focus:ring-[#FF7F7F]"
+                            ? "bg-[#FF7F7F] text-white focus:ring-[#FF7F7F] hover:scale-105"
                             : isCompleted || isPassed
-                            ? "bg-green-500 text-white focus:ring-green-500"
-                            : "bg-gray-300 text-gray-600 focus:ring-gray-400"
+                            ? "bg-green-500 text-white focus:ring-green-500 hover:scale-105 cursor-pointer"
+                            : isAccessible
+                            ? "bg-gray-300 text-gray-600 focus:ring-gray-400 hover:scale-105 cursor-pointer"
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
                         }
                       `}
-                      onClick={() => handleStepChange(step.id)}
+                      onClick={() => isAccessible && handleStepChange(step.id)}
                       aria-label={`Go to ${step.title}`}
                     >
                       {isCompleted || isPassed ? (
@@ -203,17 +272,20 @@ export default function StepProgress() {
                       )}
                     </button>
 
-                    {/* Step Title - Right next to circle */}
+                    {/* Step Title */}
                     <button
                       type="button"
-                      className={`ml-3 text-left cursor-pointer hover:text-[var(--auditly-dark-blue)] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF7F7F] rounded px-2 py-1 ${
+                      disabled={!isAccessible}
+                      className={`ml-3 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF7F7F] rounded px-2 py-1 ${
                         isActive
-                          ? "text-[var(--auditly-dark-blue)]"
+                          ? "text-[var(--auditly-dark-blue)] cursor-pointer"
                           : isCompleted || isPassed
-                          ? "text-gray-700"
-                          : "text-gray-500"
+                          ? "text-gray-700 cursor-pointer hover:text-[var(--auditly-dark-blue)]"
+                          : isAccessible
+                          ? "text-gray-500 cursor-pointer hover:text-[var(--auditly-dark-blue)]"
+                          : "text-gray-400 cursor-not-allowed"
                       }`}
-                      onClick={() => handleStepChange(step.id)}
+                      onClick={() => isAccessible && handleStepChange(step.id)}
                     >
                       <div className="text-sm font-medium">{step.title}</div>
                     </button>
@@ -225,7 +297,7 @@ export default function StepProgress() {
         </div>
       </div>
 
-      {/* Tablet Progress (md to lg) - Side by Side Header */}
+      {/* Tablet Progress */}
       <div className="hidden md:block lg:hidden bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between mb-3">
           <div>
@@ -246,22 +318,26 @@ export default function StepProgress() {
             const isActive = currentStep === step.id;
             const isCompleted = completedSteps.includes(step.id);
             const isPassed = currentStep > step.id;
+            const isAccessible = isStepAccessible(step.id);
 
             return (
               <button
                 key={step.id}
                 type="button"
+                disabled={!isAccessible}
                 className={`
                   w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2
                   ${
                     isActive
                       ? "bg-[#FF7F7F] text-white focus:ring-[#FF7F7F]"
                       : isCompleted || isPassed
-                      ? "bg-green-500 text-white focus:ring-green-500"
-                      : "bg-gray-300 text-gray-600 focus:ring-gray-400"
+                      ? "bg-green-500 text-white focus:ring-green-500 cursor-pointer"
+                      : isAccessible
+                      ? "bg-gray-300 text-gray-600 focus:ring-gray-400 cursor-pointer"
+                      : "bg-gray-200 text-gray-400 cursor-not-allowed"
                   }
                 `}
-                onClick={() => handleStepChange(step.id)}
+                onClick={() => isAccessible && handleStepChange(step.id)}
                 aria-label={`Go to ${step.title}`}
               >
                 {isCompleted || isPassed ? "✓" : step.id}
@@ -273,6 +349,13 @@ export default function StepProgress() {
 
       {/* Step Content */}
       <div className="bg-white">{renderStepContent()}</div>
+
+      {/* Custom Leave Onboarding Modal - ONLY for browser navigation */}
+      <LeaveOnboardingModal
+        isOpen={showLeaveModal}
+        onLeaveAnyway={handleLeaveAnyway}
+        onStayAndFinish={handleStayAndFinish}
+      />
     </div>
   );
 }
