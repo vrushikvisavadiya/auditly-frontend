@@ -209,10 +209,11 @@ export default function Signup() {
     <>
       <Modal
         id="signup-success"
+        // defaultOpen={true}
         title="Registration Submitted"
         description={
           registrationMessage ||
-          "Your application is under review. You'll get an email with your login link to set your password once approved."
+          "Your application is under review. You’ll get an email with your login link to set your password once approved."
         }
         header={<CheckModalHeader />}
         onClose={handleCloseModal}
@@ -230,9 +231,9 @@ export default function Signup() {
               </Button>
             </Link>
 
-            <Button className="btn" onClick={handleCloseModal}>
+            {/* <Button className="btn" onClick={handleCloseModal}>
               Done
-            </Button>
+            </Button> */}
           </div>
         </div>
       </Modal>

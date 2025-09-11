@@ -12,6 +12,7 @@ export const ENDPOINTS = {
   USER_PROFILE: "/accounts/profile/",
 
   GET_CURRENT_USER: "/accounts/get-current-user/",
+
   //   UPDATE_PROFILE: "/accounts/profile/update/",
 
   //   // Welcome Flow

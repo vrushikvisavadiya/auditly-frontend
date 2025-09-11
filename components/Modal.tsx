@@ -1,3 +1,6 @@
+"use client ";
+import { useEffect } from "react";
+
 interface ModalProps {
   id: string;
   title: string;
@@ -5,9 +8,20 @@ interface ModalProps {
   header: React.ReactNode;
   children?: React.ReactNode;
   onClose?: () => void;
+  defaultOpen?: boolean;
 }
 
 export default function Modal(props: ModalProps) {
+  useEffect(() => {
+    if (props.defaultOpen) {
+      const dialog = document.getElementById(
+        props.id
+      ) as HTMLDialogElement | null;
+      if (dialog && typeof dialog.showModal === "function") {
+        dialog.showModal();
+      }
+    }
+  }, [props.id, props.defaultOpen]);
   const handleClose = () => {
     const dialog = document.getElementById(
       props.id
@@ -21,8 +35,8 @@ export default function Modal(props: ModalProps) {
   };
 
   return (
-    <dialog id={props.id} className="modal modal-bottom sm:modal-middle">
-      <div className="modal-box rounded-t-2xl sm:rounded-2xl p-0">
+    <dialog id={props.id} className="modal modal-bottom sm:modal-middle ">
+      <div className="modal-box rounded-t-2xl sm:rounded-2xl p-0 max-w-md">
         {props.header}
         <div className="flex flex-col gap-4 p-6 items-center justify-center">
           <h3 className="text-[var(--auditly-dark-blue)] text-center [font-family:Poppins] text-xl font-semibold leading-[normal]">
