@@ -8,6 +8,7 @@ import { completeStep, updateFormData } from "@/src/redux/slices/welcomeSlice";
 import { useState } from "react";
 
 import Playiconstep1 from "../../public/icons/playiconstep1.svg";
+import { selectCurrentUser } from "@/src/redux/slices/userSlice";
 
 interface Step1Props {
   onNext: () => void;
@@ -17,6 +18,8 @@ export default function Step1({ onNext }: Step1Props) {
   const dispatch = useAppDispatch();
   const [hasWatched, setHasWatched] = useState(false);
   const user = useAppSelector((state) => state.auth.user);
+
+  const currentUser = useAppSelector(selectCurrentUser);
 
   const handleGetStarted = () => {
     dispatch(completeStep(1));
@@ -46,7 +49,8 @@ export default function Step1({ onNext }: Step1Props) {
         className="mb-8 sm:mb-12"
       >
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--auditly-dark-blue)] mb-4 sm:mb-6 leading-tight">
-          Welcome to Auditly, {user?.firstName} {user?.lastName} 👋
+          Welcome to Auditly, {currentUser?.first_name} {currentUser?.last_name}{" "}
+          👋
           <br className="hidden sm:block" />
           <span className="block sm:inline mt-2 sm:mt-0">
             Let&apos;s set up your NDIS policies step by step.

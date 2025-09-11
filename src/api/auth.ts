@@ -86,4 +86,9 @@ export const authService = {
     const { data } = await authApi.get(ENDPOINTS.USER_PROFILE);
     return data;
   },
+
+  getCurrentUser: async () => {
+    const { data } = await authApi.get(ENDPOINTS.GET_CURRENT_USER);
+    return data;
+  },
 };

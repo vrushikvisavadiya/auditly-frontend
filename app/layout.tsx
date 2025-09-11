@@ -4,6 +4,7 @@ import "material-symbols/rounded.css";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import Providers from "./providers";
+import RootWrapper from "@/src/context/RootWrapper";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -28,12 +29,14 @@ export default function RootLayout({
         className={`${montserrat.variable} ${poppins.variable} antialiased`}
       >
         <Providers>
-          {children}
-          <Toaster
-            toastOptions={{
-              style: { maxWidth: "500px" },
-            }}
-          />
+          <RootWrapper>
+            {children}
+            <Toaster
+              toastOptions={{
+                style: { maxWidth: "500px" },
+              }}
+            />
+          </RootWrapper>
         </Providers>
       </body>
     </html>

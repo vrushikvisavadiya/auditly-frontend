@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { authService } from "@/src/api/auth";
 
 // Define specific interfaces for each step's data
 interface Step1Data {
@@ -27,7 +28,6 @@ interface Step4Data {
   seniorStaffTitle?: string | null;
 }
 
-// Fixed Step5Data interface
 interface Step5Data {
   stylePreference?: string | null;
   styleExample?: string | null;
@@ -52,16 +52,40 @@ type StepFormData = {
   6?: Step6Data;
 };
 
+// Final submission data interface
+interface FinalSubmissionData {
+  provider_type: string;
+  states_operating: number[];
+  business_description: string;
+  registration_groups: number[];
+  administer_medications: boolean;
+  handle_hazardous_waste: boolean;
+  behaviour_support_plan: boolean;
+  complex_nursing_supports: boolean;
+  organization_size: string;
+  frontline_staff_label: string;
+  senior_person_label: string;
+  formality_level: string;
+  policy_header_color: string;
+  branding_guide: string;
+  policy_style: string;
+  additional_styling: string;
+}
+
 interface WelcomeState {
   currentStep: number;
   completedSteps: number[];
   formData: StepFormData;
+  submissionStatus: "idle" | "loading" | "succeeded" | "failed";
+  submissionError: string | null;
 }
 
 // Enhanced initial state with default values
 const initialState: WelcomeState = {
   currentStep: 1,
   completedSteps: [],
+  submissionStatus: "idle",
+  submissionError: null,
   formData: {
     1: {
       welcomed: false,
@@ -143,6 +167,23 @@ const getDefaultStepData = (step: keyof StepFormData) => {
   }
 };
 
+// Async thunk for onboarding submission
+export const submitOnboardingData = createAsyncThunk<
+  any,
+  FinalSubmissionData,
+  { rejectValue: string }
+>("welcome/submitOnboardingData", async (data, { rejectWithValue }) => {
+  try {
+    console.log("Submitting onboarding data:", data);
+    // const response = await authService.submitOnboarding(data);
+    // return response.data;
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.message || error.message || "Submission failed"
+    );
+  }
+});
+
 const welcomeSlice = createSlice({
   name: "welcome",
   initialState,
@@ -176,11 +217,36 @@ const welcomeSlice = createSlice({
     resetWelcome: (state) => {
       return initialState;
     },
+    resetSubmission: (state) => {
+      state.submissionStatus = "idle";
+      state.submissionError = null;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(submitOnboardingData.pending, (state) => {
+        state.submissionStatus = "loading";
+        state.submissionError = null;
+      })
+      .addCase(submitOnboardingData.fulfilled, (state) => {
+        state.submissionStatus = "succeeded";
+        state.submissionError = null;
+      })
+      .addCase(submitOnboardingData.rejected, (state, action) => {
+        state.submissionStatus = "failed";
+        state.submissionError = action.payload as string;
+      });
   },
 });
 
-export const { setCurrentStep, completeStep, updateFormData, resetWelcome } =
-  welcomeSlice.actions;
+export const {
+  setCurrentStep,
+  completeStep,
+  updateFormData,
+  resetWelcome,
+  resetSubmission,
+} = welcomeSlice.actions;
+
 export default welcomeSlice.reducer;
 
 // Export types for use in components
@@ -193,4 +259,5 @@ export type {
   Step6Data,
   StepFormData,
   WelcomeState,
+  FinalSubmissionData,
 };

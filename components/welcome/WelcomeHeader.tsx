@@ -5,12 +5,13 @@ import { useAppDispatch, useAppSelector } from "@/src/redux/hooks";
 import { logout } from "@/src/redux/slices/authSlice";
 import HelpIcon from "../../public/icons/Help.svg";
 import AuditlyLogo from "../../public/icons/auditly-logo.svg";
+import { selectCurrentUser } from "@/src/redux/slices/userSlice";
 
 export default function WelcomeHeaderMobile() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const dispatch = useAppDispatch();
 
-  const user = useAppSelector((state) => state.auth.user);
+  const currentUser = useAppSelector(selectCurrentUser);
 
   const router = useRouter();
 
@@ -38,10 +39,10 @@ export default function WelcomeHeaderMobile() {
           {/* Left side */}
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-[#5878BB] text-white rounded-full flex items-center justify-center font-bold text-sm uppercase">
-              {user?.organization_name?.slice(0, 2) || ""}
+              {currentUser?.organization_name?.slice(0, 2) || ""}
             </div>
             <span className="font-semibold text-base text-white hidden sm:inline">
-              {user?.organization_name || ""}
+              {currentUser?.organization_name || ""}
             </span>
           </div>
 

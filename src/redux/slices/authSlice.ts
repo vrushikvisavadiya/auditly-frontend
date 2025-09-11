@@ -61,7 +61,7 @@ type User = {
   platformRole: string | null;
   mustChangePassword: boolean;
   isActive: boolean;
-  organization_name: string;
+  organizationName: string;
 };
 
 type AuthState = {
@@ -119,6 +119,7 @@ export const loginUser = createAsyncThunk(
           platformRole: data.user.platform_role,
           mustChangePassword: data.user.must_change_password,
           isActive: data.user.is_active,
+          organizationName: data.organization_name,
         } as User,
       };
 

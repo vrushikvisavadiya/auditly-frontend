@@ -1,7 +1,12 @@
 // components/welcome/StepProgress.tsx
 "use client";
 import { useAppSelector, useAppDispatch } from "@/src/redux/hooks";
-import { setCurrentStep, resetWelcome } from "@/src/redux/slices/welcomeSlice";
+import {
+  setCurrentStep,
+  resetWelcome,
+  FinalSubmissionData,
+  submitOnboardingData,
+} from "@/src/redux/slices/welcomeSlice";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Step1 from "@/sections/welcome/Step1";
@@ -11,6 +16,7 @@ import Step4 from "./Step4";
 import Step5 from "./Step5";
 import Step6 from "./Step6";
 import LeaveOnboardingModal from "@/components/ui/LeaveOnboardingModal";
+import toast from "react-hot-toast";
 
 const steps = [
   {
@@ -51,6 +57,8 @@ export default function StepProgress() {
   const { currentStep, completedSteps } = useAppSelector(
     (state) => state.welcome
   );
+
+  const { formData } = useAppSelector((state) => state.welcome);
 
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -121,11 +129,90 @@ export default function StepProgress() {
     return;
   };
 
-  const handleCompleted = () => {
-    // Mark as completed - no more warnings needed
-    setHasUnsavedChanges(false);
-    console.log("Onboarding completed!");
-    router.push("/dashboard");
+  // Define types for each step's data to avoid property errors
+  type Step2Data = {
+    providerType?: string;
+    operatingStates?: { id: string }[];
+    businessDescription?: string;
+    registrationGroups?: { id: string }[];
+  };
+  type Step3Data = {
+    understandServices?: boolean;
+    transportParticipants?: boolean;
+    supportParticipantsWithBehaviour?: boolean;
+    provideFundingSupport?: boolean;
+  };
+  type Step4Data = {
+    organizationSize?: string;
+    frontlineStaffTitle?: string;
+    seniorStaffTitle?: string;
+  };
+  type Step5Data = {
+    stylePreference?: string;
+    headerColor?: string;
+    styleGuideFile?: File;
+    styleExample?: string;
+    styleDescription?: string;
+  };
+
+  const collectAllFormData = (): FinalSubmissionData => {
+    const step2Data = (formData[2] || {}) as Step2Data;
+    const step3Data = (formData[3] || {}) as Step3Data;
+    const step4Data = (formData[4] || {}) as Step4Data;
+    const step5Data = (formData[5] || {}) as Step5Data;
+
+    return {
+      // Step 2 data (Organization Discovery)
+      provider_type: step2Data.providerType || "",
+      states_operating:
+        step2Data.operatingStates?.map((state) => parseInt(state.id)) || [],
+      business_description: step2Data.businessDescription || "",
+      registration_groups:
+        step2Data.registrationGroups?.map((group) => parseInt(group.id)) || [],
+
+      // Step 3 data (Services - Yes/No questions)
+      administer_medications: step3Data.understandServices || false,
+      handle_hazardous_waste: step3Data.transportParticipants || false,
+      behaviour_support_plan:
+        step3Data.supportParticipantsWithBehaviour || false,
+      complex_nursing_supports: step3Data.provideFundingSupport || false,
+
+      // Step 4 data (Key Roles and Structure)
+      organization_size: step4Data.organizationSize || "SMALL TEAM (1-5 staff)",
+      frontline_staff_label: step4Data.frontlineStaffTitle || "SUPPORT WORKER",
+      senior_person_label: step4Data.seniorStaffTitle || "MANAGER",
+
+      // Step 5 data (Personalisation)
+      formality_level: step5Data.stylePreference || "PROFESSIONAL",
+      policy_header_color: step5Data.headerColor || "#003366",
+      branding_guide: step5Data.styleGuideFile
+        ? URL.createObjectURL(step5Data.styleGuideFile)
+        : "",
+      policy_style: step5Data.styleExample || "COMPREHENSIVE",
+      additional_styling: step5Data.styleDescription || "",
+    };
+  };
+
+  const handleCompleted = async () => {
+    try {
+      const finalData = collectAllFormData();
+      console.log("Submitting onboarding data:", finalData);
+
+      const result = await dispatch(submitOnboardingData(finalData));
+
+      if (submitOnboardingData.fulfilled.match(result)) {
+        toast.success("Onboarding completed successfully!");
+        setHasUnsavedChanges(false);
+        // setTimeout(() => {
+        //   router.push("/dashboard");
+        // }, 1500);
+      } else {
+        toast.error((result.payload as string) || "Submission failed");
+      }
+    } catch (error) {
+      console.error("Error submitting onboarding:", error);
+      toast.error("An error occurred during submission");
+    }
   };
 
   // Custom modal handlers (only for browser navigation)

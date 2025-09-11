@@ -9,12 +9,13 @@ import toast from "react-hot-toast";
 import { FormEvent, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/src/redux/hooks";
 import { loginUser } from "@/src/redux/slices/authSlice";
+import { fetchCurrentUser } from "@/src/redux/slices/userSlice";
 
 export default function Login() {
   const inputClass = "auditly-input";
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { status, error, user } = useAppSelector((s) => s.auth);
+  const { status, error } = useAppSelector((s) => s.auth);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,6 +32,8 @@ export default function Login() {
           description={`Welcome back, ${res.payload.user.firstName}!`}
         />
       ));
+      // Fetch current user data immediately after login
+      await dispatch(fetchCurrentUser());
 
       if (res?.payload.user?.mustChangePassword) {
         router.push("/reset-password");

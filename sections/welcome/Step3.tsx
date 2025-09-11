@@ -4,13 +4,14 @@ import Icon from "@/components/Icon";
 import { useAppDispatch, useAppSelector } from "@/src/redux/hooks";
 import { completeStep, updateFormData } from "@/src/redux/slices/welcomeSlice";
 import { useState } from "react";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
 interface Step3Props {
   onNext: () => void;
   onPrev: () => void;
 }
 
-// Custom Toggle Button Component for Yes/No
+// Custom Toggle Button Component for Yes/No with Framer Motion
 interface ToggleButtonProps {
   question: string;
   description?: string;
@@ -27,6 +28,57 @@ interface ToggleButtonProps {
   };
 }
 
+// Animation variants
+const containerVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 30,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -30,
+    transition: {
+      duration: 0.4,
+      ease: "easeIn",
+    },
+  },
+};
+
+const previousQuestionVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    height: 0,
+  },
+  visible: {
+    opacity: 0.6,
+    height: "auto",
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+    },
+  },
+};
+
+const buttonVariants = {
+  idle: { scale: 1 },
+  hover: {
+    scale: 1.05,
+    transition: { duration: 0.2 },
+  },
+  tap: {
+    scale: 0.95,
+    transition: { duration: 0.1 },
+  },
+};
+
 function YesNoToggle({
   question,
   description,
@@ -39,99 +91,167 @@ function YesNoToggle({
   data,
 }: ToggleButtonProps) {
   return (
-    <div className="pt-10">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="pt-10"
+      key={question}
+    >
       {/* Show previous question if available */}
-      {previousQuestion && (
-        <div className="mb-8 opacity-50">
-          <h3 className="text-lg font-medium text-gray-500 mb-2">
-            {previousQuestion.text}
-          </h3>
-          {previousQuestion.description && (
-            <p className="text-sm text-gray-400 mb-4">
-              {previousQuestion.description}
-            </p>
-          )}
-          <div className="flex gap-3">
-            <button
-              type="button"
-              disabled
-              className={`px-6 py-2 rounded-lg font-semibold ${
-                previousQuestion.answer === false
-                  ? "btn-orange text-white"
-                  : "bg-gray-200 text-gray-500"
-              }`}
+      <AnimatePresence>
+        {previousQuestion && (
+          <motion.div
+            variants={previousQuestionVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            className="mb-8 pb-6 border-b border-gray-200 overflow-hidden"
+          >
+            <motion.h3
+              className="text-lg font-medium text-gray-500 mb-2"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
             >
-              ❌ No
-            </button>
-            <button
-              type="button"
-              disabled
-              className={`px-6 py-2 rounded-lg font-semibold ${
-                previousQuestion.answer === true
-                  ? "btn-dark-blue text-white"
-                  : "bg-gray-200 text-gray-500"
-              }`}
+              {previousQuestion.text}
+            </motion.h3>
+            {previousQuestion.description && (
+              <motion.p
+                className="text-sm text-gray-400 mb-4"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                {previousQuestion.description}
+              </motion.p>
+            )}
+            <motion.div
+              className="flex gap-3"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
             >
-              ✅ Yes
-            </button>
-          </div>
-        </div>
-      )}
+              <button
+                type="button"
+                disabled
+                className={`px-6 py-2 rounded-lg font-semibold cursor-not-allowed ${
+                  previousQuestion.answer === false
+                    ? "bg-[var(--auditly-orange)] text-white"
+                    : "bg-gray-200 text-gray-500"
+                }`}
+              >
+                ❌ No
+              </button>
+              <button
+                type="button"
+                disabled
+                className={`px-6 py-2 rounded-lg font-semibold cursor-not-allowed ${
+                  previousQuestion.answer === true
+                    ? "bg-[var(--auditly-dark-blue)] text-white"
+                    : "bg-gray-200 text-gray-500"
+                }`}
+              >
+                ✅ Yes
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {showPrevious && onPrevious && (
-        <div className="flex items-center gap-2 mb-6">
-          <button
+        <motion.div
+          className="flex items-center gap-2 mb-6"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <motion.button
             onClick={onPrevious}
             className="flex items-center gap-2 text-[var(--auditly-dark-blue)] hover:text-[var(--auditly-orange)] transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            variants={buttonVariants}
           >
             <Icon
               name={isFirstQuestion ? "arrow_back" : "arrow_upward"}
               className="text-sm"
             />
             <span className="text-sm">Previous</span>
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
 
       {isFirstQuestion && (
-        <h3 className="text-xl font-medium text-[var(--auditly-dark-blue)] mb-2">
+        <motion.h3
+          className="text-xl font-medium text-[var(--auditly-dark-blue)] mb-2"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           {data?.text}
-        </h3>
+        </motion.h3>
       )}
 
       {/* Current Question */}
-      <h3 className="text-lg font-medium text-[var(--auditly-dark-blue)] mb-2">
+      <motion.h3
+        className="text-lg font-medium text-[var(--auditly-dark-blue)] mb-2"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3 }}
+      >
         {question}
-      </h3>
+      </motion.h3>
       {description && (
-        <p className="text-sm text-gray-600 mb-4">{description}</p>
+        <motion.p
+          className="text-sm text-gray-600 mb-4"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          {description}
+        </motion.p>
       )}
 
-      <div className="flex gap-3">
-        <button
+      <motion.div
+        className="flex gap-3"
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        <motion.button
           type="button"
           onClick={() => onChange(false)}
           className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
             value === false
-              ? "btn-orange text-white focus:ring-orange-500"
-              : "btn-orange text-gray-700 hover:bg-gray-300 focus:ring-gray-500"
+              ? "bg-[var(--auditly-orange)] text-white focus:ring-orange-500"
+              : "bg-[var(--auditly-orange)] text-white hover:bg-gray-300 focus:ring-gray-500"
           }`}
+          variants={buttonVariants}
+          initial="idle"
+          whileHover="hover"
+          whileTap="tap"
         >
           ❌ No
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           type="button"
           onClick={() => onChange(true)}
           className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
             value === true
-              ? "btn-dark-blue text-white focus:ring-blue-500"
-              : "btn-dark-blue text-gray-700 hover:bg-gray-300 focus:ring-gray-500"
+              ? "bg-[var(--auditly-dark-blue)] text-white focus:ring-blue-500"
+              : "bg-[var(--auditly-dark-blue)] text-white hover:bg-gray-300 focus:ring-gray-500"
           }`}
+          variants={buttonVariants}
+          initial="idle"
+          whileHover="hover"
+          whileTap="tap"
         >
           ✅ Yes
-        </button>
-      </div>
-    </div>
+        </motion.button>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -207,11 +327,8 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
   };
 
   const handlePreviousQuestion = () => {
-    console.log("Previous clicked, current index:", currentQuestionIndex);
-
     if (showSummary) {
       // From summary, go back to last question
-      console.log("Going back from summary to last question");
       setShowSummary(false);
       setCurrentQuestionIndex(questions.length - 1);
       return;
@@ -225,11 +342,8 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
     }
   };
 
-  // FIXED: Handle previous from summary
   const handlePreviousFromSummary = () => {
-    console.log("Going back from summary to last question");
     setShowSummary(false);
-    // Use setTimeout to ensure state update processes
     setTimeout(() => {
       setCurrentQuestionIndex(questions.length - 1);
     }, 0);
@@ -285,44 +399,72 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
   ) {
     return (
       <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 min-h-[calc(100vh-200px)]">
-        {/* Policy Package Summary */}
-        <div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="flex items-center gap-2 mb-6">
-            <button
+            <motion.button
               onClick={handlePreviousFromSummary}
               className="flex items-center gap-2 text-[var(--auditly-dark-blue)] hover:text-[var(--auditly-orange)] transition-colors"
               type="button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <Icon name="arrow_upward" className="text-sm" />
               <span className="text-sm">Previous</span>
-            </button>
+            </motion.button>
           </div>
 
-          <h3 className="text-xl font-semibold text-[var(--auditly-dark-blue)] mb-6">
+          <motion.h3
+            className="text-xl font-semibold text-[var(--auditly-dark-blue)] mb-6"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
             Your Policy Package so far:
-          </h3>
+          </motion.h3>
 
-          <div className="space-y-4">
-            {getPolicyPackages().map((pkg) => (
-              <div key={pkg.id} className="flex items-center gap-3">
+          <motion.div
+            className="space-y-4"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            {getPolicyPackages().map((pkg, index) => (
+              <motion.div
+                key={pkg.id}
+                className="flex items-center gap-3"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.5 + index * 0.1 }}
+              >
                 <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                   <Icon name="check" className="text-white text-xs" />
                 </div>
                 <span className="text-gray-700 text-base">{pkg.name}</span>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
-          <div className="mt-8 flex justify-end">
-            <Button
-              onClick={handleNext}
-              iconRight={<Icon name="arrow_forward" />}
-              className="px-8 py-3 bg-[var(--auditly-dark-blue)] text-white hover:bg-[var(--auditly-orange)] transition-colors"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+          <motion.div
+            className="mt-8 flex justify-end"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.8 }}
+          >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                onClick={handleNext}
+                iconRight={<Icon name="arrow_forward" />}
+                className="px-8 py-3 bg-[var(--auditly-dark-blue)] text-white hover:bg-[var(--auditly-orange)] transition-colors"
+              >
+                Next
+              </Button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
     );
   }
@@ -333,18 +475,20 @@ export default function Step3({ onNext, onPrev }: Step3Props) {
   return (
     <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 min-h-[calc(100vh-200px)]">
       <div className="space-y-6">
-        <YesNoToggle
-          key={currentQuestionIndex}
-          data={currentQuestion}
-          question={currentQuestion.question}
-          description={currentQuestion.description}
-          value={data[currentQuestion.id]}
-          onChange={(value) => handleAnswerChange(currentQuestion.id, value)}
-          onPrevious={handlePreviousQuestion}
-          showPrevious={true}
-          isFirstQuestion={currentQuestionIndex === 0}
-          previousQuestion={prevQ}
-        />
+        <AnimatePresence mode="wait">
+          <YesNoToggle
+            key={currentQuestionIndex}
+            data={currentQuestion}
+            question={currentQuestion.question}
+            description={currentQuestion.description}
+            value={data[currentQuestion.id]}
+            onChange={(value) => handleAnswerChange(currentQuestion.id, value)}
+            onPrevious={handlePreviousQuestion}
+            showPrevious={true}
+            isFirstQuestion={currentQuestionIndex === 0}
+            previousQuestion={prevQ}
+          />
+        </AnimatePresence>
       </div>
     </div>
   );
