@@ -140,13 +140,23 @@ export default function StepProgress() {
     setShowLeaveModal(false);
   };
 
-  // Check if a step is accessible
+  // FIXED: Check if a step is accessible - prevents future steps from being clickable
   const isStepAccessible = (stepId: number) => {
-    return (
-      stepId <= currentStep || // Current or previous steps
-      completedSteps.includes(stepId - 1) || // Previous step is completed
-      completedSteps.includes(currentStep) // Current step is completed
-    );
+    // Always allow current step
+    if (stepId === currentStep) return true;
+
+    // Allow clicking on previous steps only if they are completed
+    if (stepId < currentStep) {
+      return completedSteps.includes(stepId);
+    }
+
+    // Allow next step only if current step is completed
+    if (stepId === currentStep + 1) {
+      return completedSteps.includes(currentStep);
+    }
+
+    // Block all other steps
+    return false;
   };
 
   // Render the appropriate step component
