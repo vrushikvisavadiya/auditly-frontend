@@ -1,5 +1,10 @@
+// src/redux/slices/welcomeSlice.ts
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { authService } from "@/src/api/auth";
+import {
+  organizationService,
+  OrganizationSetupData,
+} from "@/src/api/organization";
+import type { RootState } from "../store";
 
 // Define specific interfaces for each step's data
 interface Step1Data {
@@ -52,7 +57,7 @@ type StepFormData = {
   6?: Step6Data;
 };
 
-// Final submission data interface
+// Final submission data interface (kept for compatibility)
 interface FinalSubmissionData {
   provider_type: string;
   states_operating: number[];
@@ -167,22 +172,50 @@ const getDefaultStepData = (step: keyof StepFormData) => {
   }
 };
 
-// Async thunk for onboarding submission
+// Async thunk for onboarding submission with organization setup API
 export const submitOnboardingData = createAsyncThunk<
   any,
-  FinalSubmissionData,
-  { rejectValue: string }
->("welcome/submitOnboardingData", async (data, { rejectWithValue }) => {
-  try {
-    console.log("Submitting onboarding data:", data);
-    // const response = await authService.submitOnboarding(data);
-    // return response.data;
-  } catch (error: any) {
-    return rejectWithValue(
-      error.response?.data?.message || error.message || "Submission failed"
-    );
+  { data: FinalSubmissionData; orgId: string },
+  { rejectValue: string; state: RootState }
+>(
+  "welcome/submitOnboardingData",
+  async ({ data, orgId }, { rejectWithValue }) => {
+    try {
+      console.log("Submitting onboarding data:", data);
+      console.log("Organization ID:", orgId);
+
+      // Convert FinalSubmissionData to OrganizationSetupData format
+      const setupData: OrganizationSetupData = {
+        provider_type: data.provider_type,
+        states_operating: data.states_operating,
+        business_description: data.business_description,
+        registration_groups: data.registration_groups,
+        administer_medications: data.administer_medications,
+        handle_hazardous_waste: data.handle_hazardous_waste,
+        behaviour_support_plan: data.behaviour_support_plan,
+        complex_nursing_supports: data.complex_nursing_supports,
+        organization_size: data.organization_size,
+        frontline_staff_label: data.frontline_staff_label,
+        senior_person_label: data.senior_person_label,
+        formality_level: data.formality_level,
+        policy_header_color: data.policy_header_color,
+        branding_guide: data.branding_guide,
+        policy_style: data.policy_style,
+        additional_styling: data.additional_styling,
+      };
+
+      const response = await organizationService.setupOrganization(
+        orgId,
+        setupData
+      );
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Submission failed"
+      );
+    }
   }
-});
+);
 
 const welcomeSlice = createSlice({
   name: "welcome",

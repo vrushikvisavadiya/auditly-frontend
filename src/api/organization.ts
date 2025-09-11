@@ -22,6 +22,26 @@ export interface MatchedGroup {
   audit_type: string;
 }
 
+// Organization setup data interface
+export interface OrganizationSetupData {
+  provider_type: string;
+  states_operating: number[];
+  business_description: string;
+  registration_groups: number[];
+  administer_medications: boolean;
+  handle_hazardous_waste: boolean;
+  behaviour_support_plan: boolean;
+  complex_nursing_supports: boolean;
+  organization_size: string;
+  frontline_staff_label: string;
+  senior_person_label: string;
+  formality_level: string;
+  policy_header_color: string;
+  branding_guide: string;
+  policy_style: string;
+  additional_styling: string;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -95,6 +115,34 @@ export const organizationService = {
         error.response?.data?.message ||
           error.message ||
           "Failed to match groups"
+      );
+    }
+  },
+
+  // Setup organization (new method)
+  setupOrganization: async (
+    orgId: string,
+    data: OrganizationSetupData
+  ): Promise<any> => {
+    try {
+      const response: AxiosResponse<ApiResponse<any>> = await authApi.patch(
+        `${ENDPOINTS.ORGANIZATION_SETUP}?org_id=${orgId}`,
+        data
+      );
+
+      if (!response.data.success) {
+        throw new Error(
+          response.data.message || "Failed to setup organization"
+        );
+      }
+
+      return response.data.data;
+    } catch (error: any) {
+      console.error("Error setting up organization:", error);
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to setup organization"
       );
     }
   },

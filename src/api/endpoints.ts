@@ -17,4 +17,6 @@ export const ENDPOINTS = {
   REGISTRATION_GROUPS: "/policy/registration-groups/",
 
   MATCH_GROUPS: "/policy/match-groups/",
+
+  ORGANIZATION_SETUP: "/organization/setup/",
 } as const;

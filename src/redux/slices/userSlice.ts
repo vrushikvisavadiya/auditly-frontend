@@ -9,6 +9,7 @@ interface User {
   email: string;
   first_name: string;
   last_name: string;
+  organization_id: string;
   organization_name: string;
   platform_role: string | null;
   must_change_password: boolean;

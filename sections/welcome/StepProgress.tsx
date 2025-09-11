@@ -7,6 +7,7 @@ import {
   FinalSubmissionData,
   submitOnboardingData,
 } from "@/src/redux/slices/welcomeSlice";
+import { selectCurrentUser } from "@/src/redux/slices/userSlice";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Step1 from "@/sections/welcome/Step1";
@@ -57,8 +58,8 @@ export default function StepProgress() {
   const { currentStep, completedSteps } = useAppSelector(
     (state) => state.welcome
   );
-
   const { formData } = useAppSelector((state) => state.welcome);
+  const currentUser = useAppSelector(selectCurrentUser);
 
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -107,12 +108,6 @@ export default function StepProgress() {
 
   // Handle step changes - Allow clicking on any completed step or adjacent step
   const handleStepChange = (step: number) => {
-    // Allow navigation to:
-    // 1. Current step (no change)
-    // 2. Previous steps (already completed)
-    // 3. Next step if current step is completed
-    // 4. Adjacent steps (prev/next)
-
     if (
       step === currentStep || // Same step
       step < currentStep || // Previous step
@@ -124,8 +119,6 @@ export default function StepProgress() {
       return;
     }
 
-    // For non-accessible steps, don't show modal, just ignore the click
-    // This prevents jumping to future steps that haven't been unlocked
     return;
   };
 
@@ -196,22 +189,31 @@ export default function StepProgress() {
   const handleCompleted = async () => {
     try {
       const finalData = collectAllFormData();
-      console.log("Submitting onboarding data:", finalData);
 
-      const result = await dispatch(submitOnboardingData(finalData));
+      const orgId = currentUser?.organization_id || "temp-org-id";
+
+      console.log("Submitting onboarding data:", finalData);
+      console.log("Organization ID:", orgId);
+
+      const result = await dispatch(
+        submitOnboardingData({
+          data: finalData,
+          orgId,
+        })
+      );
 
       if (submitOnboardingData.fulfilled.match(result)) {
-        toast.success("Onboarding completed successfully!");
+        toast.success("Organization setup completed successfully!");
         setHasUnsavedChanges(false);
         // setTimeout(() => {
-        //   router.push("/dashboard");
+        //   router.push("/");
         // }, 1500);
       } else {
-        toast.error((result.payload as string) || "Submission failed");
+        toast.error((result.payload as string) || "Setup failed");
       }
     } catch (error) {
       console.error("Error submitting onboarding:", error);
-      toast.error("An error occurred during submission");
+      toast.error("An error occurred during setup");
     }
   };
 

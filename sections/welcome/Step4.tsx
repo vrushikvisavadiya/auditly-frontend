@@ -67,7 +67,7 @@ export default function Step4({ onNext, onPrev }: Step4Props) {
   ) => {
     const newData = {
       ...data,
-      [questionId]: selectedOption?.label || null,
+      [questionId]: selectedOption?.value || null,
     };
 
     setData(newData);

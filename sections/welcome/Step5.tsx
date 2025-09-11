@@ -73,17 +73,17 @@ export default function Step5({ onNext, onPrev }: Step5Props) {
   // Style preference options
   const styleOptions = [
     {
-      value: "government",
+      value: "GOVERNMENT STYLE",
       label: "Government-style (very formal)",
       emoji: "🏛️",
     },
     {
-      value: "professional",
+      value: "PROFESSIONAL",
       label: "Professional but clear",
       emoji: "💼",
     },
     {
-      value: "friendly",
+      value: "FRIENDLY",
       label: "Friendly & easy to read",
       emoji: "😊",
     },
@@ -92,17 +92,17 @@ export default function Step5({ onNext, onPrev }: Step5Props) {
   // Style example options
   const styleExampleOptions = [
     {
-      value: "comprehensive",
+      value: "COMPREHENSIVE",
       label: "Comprehensive (detailed, all-in-one)",
       // description: "Includes all details in one comprehensive document",
     },
     {
-      value: "professional",
+      value: "PROFESSIONAL",
       label: "Professional (clean, complete)",
       // description: "Clean and organized professional approach",
     },
     {
-      value: "user-friendly",
+      value: "USER FRIENDLY",
       label: "User-friendly (simple & easy)",
       // description: "Easy to understand and follow format",
     },

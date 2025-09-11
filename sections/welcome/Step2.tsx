@@ -372,11 +372,11 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
             className="flex justify-center py-12"
           >
             <LoadingDots />
-            {matchingLoading && (
+            {/* {matchingLoading && (
               <p className="ml-4 text-gray-600">
                 Analyzing your business description...
               </p>
-            )}
+            )} */}
           </motion.div>
         )}
       </AnimatePresence>
