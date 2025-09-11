@@ -13,16 +13,8 @@ export const ENDPOINTS = {
 
   GET_CURRENT_USER: "/accounts/get-current-user/",
 
-  //   UPDATE_PROFILE: "/accounts/profile/update/",
+  STATES: "/organization/states/",
+  REGISTRATION_GROUPS: "/policy/registration-groups/",
 
-  //   // Welcome Flow
-  //   WELCOME_DATA: "/welcome/data/",
-  //   WELCOME_SUBMIT: "/welcome/submit/",
-
-  // Dashboard
-  //   DASHBOARD_STATS: "/dashboard/stats/",
-
-  // Policies
-  //   POLICIES: "/policies/",
-  //   POLICY_PACKAGES: "/policies/packages/",
+  MATCH_GROUPS: "/policy/match-groups/",
 } as const;

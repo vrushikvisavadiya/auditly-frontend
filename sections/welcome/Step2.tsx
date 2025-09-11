@@ -6,15 +6,19 @@ import CustomMultiSelect, {
   OptionType,
 } from "@/components/ui/CustomMultiSelect";
 import LoadingDots from "@/components/ui/LoadingDots";
-import {
-  registrationGroupOptions,
-  stateOptions,
-  suggestedRegistrationGroups,
-} from "@/src/constants/dropdownOptions";
 import { useAppDispatch, useAppSelector } from "@/src/redux/hooks";
 import { completeStep, updateFormData } from "@/src/redux/slices/welcomeSlice";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  getSelectedRegistrationIds,
+  getSelectedStateIds,
+} from "@/src/utils/organizationHelpers";
+import {
+  useRegistrationGroups,
+  useStates,
+  useMatchGroups,
+} from "@/src/hooks/useOrganizationData";
 
 interface Step2Props {
   onNext: () => void;
@@ -97,14 +101,7 @@ function PreviousQuestionSummary({ question }: { question: PreviousQuestion }) {
 
       {question.type === "suggestions" && question.answer && (
         <div className="flex flex-wrap gap-2">
-          {suggestedRegistrationGroups.map((reg, index) => (
-            <div
-              key={reg.id}
-              className="inline-flex items-center px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded-md"
-            >
-              {reg.name}
-            </div>
-          ))}
+          {/* This will be populated dynamically from API */}
         </div>
       )}
     </div>
@@ -116,6 +113,21 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
   const formData: Step2FormData = useAppSelector(
     (state) => state.welcome.formData[2] || {}
   );
+
+  const { states, loading: statesLoading, error: statesError } = useStates();
+  const {
+    registrationGroups,
+    loading: groupsLoading,
+    error: groupsError,
+  } = useRegistrationGroups();
+
+  // New hook for matching groups
+  const {
+    matchedGroups,
+    loading: matchingLoading,
+    error: matchingError,
+    matchGroups,
+  } = useMatchGroups();
 
   const [data, setData] = useState<Step2FormData>({
     providerType: formData.providerType || "",
@@ -130,6 +142,13 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
   const [showSuggestionConfirmation, setShowSuggestionConfirmation] =
     useState(false);
   const [showRegistrationSelect, setShowRegistrationSelect] = useState(false);
+
+  const [selectedStates, setSelectedStates] = useState<OptionType[]>(
+    formData.operatingStates || []
+  );
+  const [selectedGroups, setSelectedGroups] = useState<OptionType[]>(
+    formData.registrationGroups || []
+  );
 
   const questions = [
     {
@@ -166,14 +185,32 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
     },
   ];
 
-  // Auto-advance to next question with loading
-  const goToNextQuestion = () => {
+  // Auto-advance to next question with loading and API call for business description
+  const goToNextQuestion = async () => {
     if (currentQuestionIndex < questions.length - 1) {
       setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        setCurrentQuestionIndex(currentQuestionIndex + 1);
-      }, 1500);
+
+      // If moving from business description, call match groups API
+      if (currentQuestionIndex === 2 && data.businessDescription) {
+        try {
+          await matchGroups(data.businessDescription);
+          // Set matched groups as selected groups
+          setTimeout(() => {
+            setSelectedGroups(matchedGroups);
+            setIsLoading(false);
+            setCurrentQuestionIndex(currentQuestionIndex + 1);
+          }, 1500);
+        } catch (error) {
+          console.error("Error matching groups:", error);
+          setIsLoading(false);
+          setCurrentQuestionIndex(currentQuestionIndex + 1);
+        }
+      } else {
+        setTimeout(() => {
+          setIsLoading(false);
+          setCurrentQuestionIndex(currentQuestionIndex + 1);
+        }, 1500);
+      }
     }
   };
 
@@ -182,6 +219,8 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
     if (showRegistrationSelect) {
       setShowRegistrationSelect(false);
       setCurrentQuestionIndex(3);
+      // Reset to matched groups when going back from edit
+      setSelectedGroups(matchedGroups);
     } else if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
       setShowSuggestionConfirmation(false);
@@ -197,7 +236,7 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
       case "providerType":
         return data.providerType && data.providerType.trim() !== "";
       case "operatingStates":
-        return data.operatingStates && data.operatingStates.length > 0;
+        return selectedStates && selectedStates.length > 0;
       case "businessDescription":
         return (
           data.businessDescription && data.businessDescription.trim() !== ""
@@ -205,7 +244,7 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
       case "suggestions":
         return showSuggestionConfirmation;
       case "registrationGroups":
-        return data.registrationGroups && data.registrationGroups.length > 0;
+        return selectedGroups && selectedGroups.length > 0;
       default:
         return false;
     }
@@ -218,26 +257,34 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
   // Handle "Yes, looks good" - proceed to next step
   const handleConfirmSuggestions = () => {
     setShowSuggestionConfirmation(true);
-    onNext();
+    handleNext(); // Directly call handleNext instead of onNext
   };
 
-  // Handle "Edit" - show registration selection
+  // Handle "Edit" - show registration selection and reset selectedGroups
   const handleEditSuggestions = () => {
     setShowRegistrationSelect(true);
     setCurrentQuestionIndex(4);
+    // Reset selected groups to empty for manual selection
+    setSelectedGroups([]);
   };
 
   const handleNext = async () => {
+    const stateIds = getSelectedStateIds(selectedStates);
+    const registrationGroupIds = getSelectedRegistrationIds(selectedGroups);
+
+    console.log("State IDs for API:", stateIds);
+    console.log("Registration Group IDs for API:", registrationGroupIds);
+
     try {
-      await dispatch(completeStep(2));
-      await dispatch(
+      dispatch(completeStep(2));
+      dispatch(
         updateFormData({
           step: 2,
           data: {
             providerType: data.providerType,
-            operatingStates: data.operatingStates,
+            operatingStates: selectedStates,
             businessDescription: data.businessDescription,
-            registrationGroups: data.registrationGroups,
+            registrationGroups: selectedGroups,
           },
         })
       );
@@ -258,16 +305,16 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
           answer = data.providerType;
           break;
         case "operatingStates":
-          answer = data.operatingStates;
+          answer = selectedStates;
           break;
         case "businessDescription":
           answer = data.businessDescription;
           break;
         case "suggestions":
-          answer = showSuggestionConfirmation;
+          answer = matchedGroups;
           break;
         case "registrationGroups":
-          answer = data.registrationGroups;
+          answer = selectedGroups;
           break;
       }
 
@@ -285,6 +332,28 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
   const areInputsDisabled = showRegistrationSelect;
   const previousQuestion = getPreviousQuestion();
 
+  if (statesLoading || groupsLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <LoadingDots />
+      </div>
+    );
+  }
+
+  if (statesError) {
+    return (
+      <div className="text-red-600">Error loading states: {statesError}</div>
+    );
+  }
+
+  if (groupsError) {
+    return (
+      <div className="text-red-600">
+        Error loading registration groups: {groupsError}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 min-h-[calc(100vh-200px)]">
       {/* Previous Question Summary */}
@@ -294,7 +363,7 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
 
       {/* Loading State */}
       <AnimatePresence>
-        {isLoading && (
+        {(isLoading || matchingLoading) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -303,15 +372,26 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
             className="flex justify-center py-12"
           >
             <LoadingDots />
+            {matchingLoading && (
+              <p className="ml-4 text-gray-600">
+                Analyzing your business description...
+              </p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Error Display */}
+      {matchingError && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          {matchingError}
+        </div>
+      )}
+
       {/* Question Content */}
       <AnimatePresence mode="wait">
-        {!isLoading && (
+        {!isLoading && !matchingLoading && (
           <>
-            {" "}
             {/* Previous Button - Always visible */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -333,6 +413,7 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
                 <span className="text-sm">Previous</span>
               </button>
             </motion.div>
+
             <motion.div
               key={currentQuestion.id}
               initial={{ opacity: 0, y: 20 }}
@@ -390,9 +471,9 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
                         <input
                           type="radio"
                           name="providerType"
-                          value="Home Care"
-                          checked={data.providerType === "Home Care"}
-                          onChange={() => handleProviderTypeChange("Home Care")}
+                          value="HOME_CARE"
+                          checked={data.providerType === "HOME_CARE"}
+                          onChange={() => handleProviderTypeChange("HOME_CARE")}
                           disabled={areInputsDisabled}
                           className="sr-only peer"
                         />
@@ -441,22 +522,14 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
                     }
                   >
                     <CustomMultiSelect
-                      options={stateOptions}
-                      selectedValues={
-                        Array.isArray(data.operatingStates)
-                          ? data.operatingStates
-                          : []
-                      }
-                      onChange={(selectedList) => {
-                        if (!areInputsDisabled) {
-                          setData({ ...data, operatingStates: selectedList });
-                        }
-                      }}
+                      options={states}
+                      selectedValues={selectedStates}
+                      onChange={setSelectedStates}
                       placeholder="Type or select territories"
                     />
                   </div>
 
-                  {isCurrentQuestionValid() && !areInputsDisabled && (
+                  {selectedStates.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -528,7 +601,7 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
                       {currentQuestion.question}
                     </h3>
                     <div className="flex flex-wrap gap-2 mb-8">
-                      {suggestedRegistrationGroups.map((reg, index) => (
+                      {matchedGroups.map((reg, index) => (
                         <motion.div
                           key={reg.id}
                           initial={{ opacity: 0, scale: 0.8 }}
@@ -569,45 +642,38 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
                     {currentQuestion.question}
                   </h3>
                   <CustomMultiSelect
-                    options={registrationGroupOptions}
-                    selectedValues={
-                      Array.isArray(data.registrationGroups)
-                        ? data.registrationGroups
-                        : []
-                    }
-                    onChange={(selectedList) => {
-                      setData({ ...data, registrationGroups: selectedList });
-                    }}
+                    options={registrationGroups}
+                    selectedValues={selectedGroups}
+                    onChange={setSelectedGroups}
                     placeholder="Search and select registration groups..."
                   />
 
-                  {data.registrationGroups &&
-                    data.registrationGroups.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="mt-8 pt-6 border-t border-gray-200"
-                      >
-                        <h4 className="font-semibold text-[var(--auditly-dark-blue)] text-base mb-4">
-                          Please review your selection before continuing
-                        </h4>
-                        <div className="flex justify-start gap-4 items-center">
-                          <Button
-                            onClick={goToPreviousQuestion}
-                            className="px-6 py-3 bg-[var(--auditly-orange)] text-white hover:bg-[var(--auditly-orange)]/90 transition-colors"
-                          >
-                            ❌ Discard Selection
-                          </Button>
-                          <Button
-                            onClick={handleNext}
-                            className="px-8 py-3 bg-[var(--auditly-dark-blue)] text-white hover:bg-[var(--auditly-orange)] transition-colors"
-                          >
-                            ✅ Confirm Selection
-                          </Button>
-                        </div>
-                      </motion.div>
-                    )}
+                  {selectedGroups && selectedGroups.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="mt-8 pt-6 border-t border-gray-200"
+                    >
+                      <h4 className="font-semibold text-[var(--auditly-dark-blue)] text-base mb-4">
+                        Please review your selection before continuing
+                      </h4>
+                      <div className="flex justify-start gap-4 items-center">
+                        <Button
+                          onClick={goToPreviousQuestion}
+                          className="px-6 py-3 bg-[var(--auditly-orange)] text-white hover:bg-[var(--auditly-orange)]/90 transition-colors"
+                        >
+                          ❌ Discard Selection
+                        </Button>
+                        <Button
+                          onClick={handleNext}
+                          className="px-8 py-3 bg-[var(--auditly-dark-blue)] text-white hover:bg-[var(--auditly-orange)] transition-colors"
+                        >
+                          ✅ Confirm Selection
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
               )}
             </motion.div>
