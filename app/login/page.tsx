@@ -14,6 +14,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
+import { ROUTES } from "@/src/routes/constants";
 
 // Zod schema for form validation
 const loginSchema = z.object({
@@ -67,7 +68,7 @@ export default function Login() {
       if (res?.payload.user?.mustChangePassword) {
         router.push("/reset-password");
       } else {
-        router.push("/welcome");
+        router.push(ROUTES.ORGANIZATION);
       }
     } else {
       toast.error((res.payload as string) || "Invalid credentials");

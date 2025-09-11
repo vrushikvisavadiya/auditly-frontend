@@ -13,6 +13,7 @@ import {
   resetPassword,
   resetPasswordWithToken,
 } from "@/src/redux/slices/authSlice";
+import { ROUTES } from "@/src/routes/constants";
 
 // Separate component that uses useSearchParams
 function ResetPasswordForm() {
@@ -110,7 +111,7 @@ function ResetPasswordForm() {
         if (isTokenReset) {
           router.push("/login"); // From email link -> go to login
         } else {
-          router.push("/welcome"); // From first login -> go to welcome
+          router.push(ROUTES.ORGANIZATION); // From first login -> go to welcome
         }
       }, 2000);
     } else {
