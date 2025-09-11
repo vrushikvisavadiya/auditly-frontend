@@ -9,6 +9,13 @@ import Modal, { CheckModalHeader } from "@/components/Modal";
 
 import { useAppDispatch, useAppSelector } from "@/src/redux/hooks";
 import { registerUser, resetRegistration } from "@/src/redux/slices/authSlice";
+import {
+  isValidGenuineEmail,
+  isValidName,
+  isValidOrgName,
+} from "@/src/utils/validation";
+import toast from "react-hot-toast";
+import Link from "next/link";
 
 export default function Signup() {
   const inputClass = "auditly-input";
@@ -51,16 +58,40 @@ export default function Signup() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (registrationStatus === "loading") return; // prevent double submit
+    if (registrationStatus === "loading") return;
 
-    // Basic trimming + simple front-end validation
+    // Basic trimming + validation
     const _first = firstName.trim();
     const _last = lastName.trim();
     const _org = orgName.trim();
     const _email = email.trim();
     const _phone = phone.trim();
 
-    if (!_first || !_last || !_org || !_email || !_phone) return;
+    // Validate using utility functions
+    if (!isValidName(_first)) {
+      toast.error("Please enter a valid first name");
+      return;
+    }
+
+    if (!isValidName(_last)) {
+      toast.error("Please enter a valid last name");
+      return;
+    }
+
+    if (!isValidOrgName(_org)) {
+      toast.error("Please enter a valid business name");
+      return;
+    }
+
+    if (!isValidGenuineEmail(_email)) {
+      toast.error("Please enter a valid, professional email address");
+      return;
+    }
+
+    if (!_phone) {
+      toast.error("Please enter your phone number");
+      return;
+    }
 
     const payload = {
       first_name: _first,
@@ -187,16 +218,8 @@ export default function Signup() {
         onClose={handleCloseModal}
       >
         <div className="space-y-3">
-          {registrationInfo && (
-            <p className="text-sm">
-              <strong>Request ID:</strong> {registrationInfo.id} <br />
-              <strong>Status:</strong> {registrationInfo.status} <br />
-              <strong>Email:</strong> {registrationInfo.email}
-            </p>
-          )}
-
           <div className="flex gap-2">
-            <a href="/about" target="_blank" rel="noreferrer">
+            <Link href="/about" target="_blank" rel="noreferrer">
               <Button
                 iconRight={
                   <Icon name="open_in_new" className="font-light! text-lg!" />
@@ -205,7 +228,7 @@ export default function Signup() {
               >
                 Learn more about Auditly
               </Button>
-            </a>
+            </Link>
 
             <Button className="btn" onClick={handleCloseModal}>
               Done

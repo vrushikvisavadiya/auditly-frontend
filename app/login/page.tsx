@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import ExternalLayout from "@/components/ExternalLayout";
 import InputWrapper from "@/components/InputWrapper";
@@ -12,7 +13,8 @@ import { loginUser } from "@/src/redux/slices/authSlice";
 export default function Login() {
   const inputClass = "auditly-input";
   const dispatch = useAppDispatch();
-  const { status, error } = useAppSelector((s) => s.auth);
+  const router = useRouter();
+  const { status, error, user } = useAppSelector((s) => s.auth);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,25 +22,21 @@ export default function Login() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const res = await dispatch(loginUser({ email, password }));
+
     if (loginUser.fulfilled.match(res)) {
       toast((t) => (
         <SuccessToast
           t={t}
           title="Login Successful"
-          description="You’re now signed in and ready to go."
+          description={`Welcome back, ${res.payload.user.firstName}!`}
         />
       ));
-      console.log("res: ", res, res?.payload.user);
 
       if (res?.payload.user?.mustChangePassword) {
-        // Redirect to change password page if required
-        window.location.href = "/reset-password";
+        router.push("/reset-password");
       } else {
-        // Redirect to dashboard or home page
-        window.location.href = "/welcome";
+        router.push("/welcome");
       }
-      // optional: redirect with next/navigation
-      // router.push("/dashboard");
     } else {
       toast.error((res.payload as string) || "Invalid credentials");
     }

@@ -61,13 +61,14 @@ type User = {
   platformRole: string | null;
   mustChangePassword: boolean;
   isActive: boolean;
+  organization_name: string;
 };
 
 type AuthState = {
   // existing login fields...
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
-  user: { id: string; email: string } | null;
+  user: User | null; // now full user object
   accessToken: string | null;
 
   // signup flow (no tokens)
@@ -113,8 +114,8 @@ export const loginUser = createAsyncThunk(
         user: {
           id: data.user.id,
           email: data.user.email,
-          firstName: data.user.firstName,
-          lastName: data.user.lastName,
+          firstName: data.user.first_name,
+          lastName: data.user.last_name,
           platformRole: data.user.platform_role,
           mustChangePassword: data.user.must_change_password,
           isActive: data.user.is_active,
@@ -277,7 +278,8 @@ const authSlice = createSlice({
           try {
             const user = JSON.parse(userStr);
             state.accessToken = token;
-            state.user = { id: user.id, email: user.email };
+            // state.user = { id: user.id, email: user.email };
+            state.user = user;
             state.status = "succeeded";
           } catch (error) {
             // Clear invalid data
@@ -297,10 +299,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.user = {
-          id: action.payload.user.id,
-          email: action.payload.user.email,
-        };
+        state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
         state.error = null;
       })
