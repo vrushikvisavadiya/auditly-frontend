@@ -7,6 +7,8 @@ import HelpIcon from "../../public/icons/Help.svg";
 import AuditlyLogo from "../../public/icons/auditly-logo.svg";
 import { selectCurrentUser } from "@/src/redux/slices/userSlice";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
+import Link from "next/link";
+import { ROUTES } from "@/src/routes/constants";
 
 export default function WelcomeHeaderMobile() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -90,14 +92,20 @@ export default function WelcomeHeaderMobile() {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-2">
-              <button className="flex items-center gap-2 hover:bg-white/10 px-3 py-2 rounded-lg transition-colors">
+              <Link
+                href={ROUTES.POLICY_GUIDE}
+                className="flex items-center gap-2 hover:bg-white/10 px-3 py-2 rounded-lg transition-colors"
+              >
                 <HelpIcon className="w-4 h-4" />
-                <span className="text-sm">Help Center</span>
-              </button>
-              <button className="flex items-center gap-2 hover:bg-white/10 px-3 py-2 rounded-lg transition-colors">
+                <span className="text-sm">Policy Guide</span>
+              </Link>
+              <Link
+                href={ROUTES.ASK_AUDITLY}
+                className="flex items-center gap-2 hover:bg-white/10 px-3 py-2 rounded-lg transition-colors"
+              >
                 <AuditlyLogo />
-                <span className="text-sm">Contact Auditly</span>
-              </button>
+                <span className="text-sm">Ask Auditly</span>
+              </Link>
               <div className="w-px h-6 bg-white/20 mx-2"></div>
               <button
                 onClick={showLogoutConfirmation}
@@ -111,14 +119,20 @@ export default function WelcomeHeaderMobile() {
           {/* Mobile Menu */}
           {isMenuOpen && (
             <div className="md:hidden border-t border-white/20 py-4 space-y-2">
-              <button className="flex items-center gap-3 w-full text-left px-4 py-2 hover:bg-white/10 rounded-lg transition-colors">
+              <Link
+                href={ROUTES.POLICY_GUIDE}
+                className="flex items-center gap-3 w-full text-left px-4 py-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
                 <HelpIcon className="w-4 h-4" />
-                <span className="text-sm">Help Center</span>
-              </button>
-              <button className="flex items-center gap-3 w-full text-left px-4 py-2 hover:bg-white/10 rounded-lg transition-colors">
+                <span className="text-sm">Policy Guide</span>
+              </Link>
+              <Link
+                href={ROUTES.ASK_AUDITLY}
+                className="flex items-center gap-3 w-full text-left px-4 py-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <span className="text-sm">Contact Auditly</span>
-              </button>
+                <span className="text-sm">Ask Auditly</span>
+              </Link>
               <button
                 onClick={showLogoutConfirmation}
                 className="flex items-center gap-3 w-full text-left px-4 py-2 hover:bg-white/10 rounded-lg transition-colors"
