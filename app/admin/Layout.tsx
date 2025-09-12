@@ -1,11 +1,15 @@
+"use client";
+
 import Tabs from "@/components/Tabs";
 import Header from "./Header";
 import clsx from "clsx";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 interface LayoutProps {
   className?: string;
   children: React.ReactNode;
 }
+
 export default function Layout(props: LayoutProps) {
   const tabs = [
     { label: "Dashboard", link: "/admin/dashboard" },
@@ -16,20 +20,22 @@ export default function Layout(props: LayoutProps) {
     { label: "Feedback", link: "/admin/feedback" },
   ];
   return (
-    <div className="flex flex-col h-screen [background:linear-gradient(0deg,rgba(88,120,187,0.10)_0%,rgba(88,120,187,0.10)_100%),#FFF]">
-      {/* Header */}
-      <Header />
-      <Tabs tabs={tabs} />
-      <div className="p-8 [background:linear-gradient(0deg,rgba(88,120,187,0.10)_0%,rgba(88,120,187,0.10)_100%),#FFF]">
-        <div
-          className={clsx(
-            "overflow-auto rounded-2xl bg-white p-6",
-            props.className
-          )}
-        >
-          {props.children}
+    <ProtectedRoute requireAdmin>
+      <div className="flex flex-col h-screen [background:linear-gradient(0deg,rgba(88,120,187,0.10)_0%,rgba(88,120,187,0.10)_100%),#FFF]">
+        {/* Header */}
+        <Header />
+        <Tabs tabs={tabs} />
+        <div className="p-8 [background:linear-gradient(0deg,rgba(88,120,187,0.10)_0%,rgba(88,120,187,0.10)_100%),#FFF]">
+          <div
+            className={clsx(
+              "overflow-auto rounded-2xl bg-white p-6",
+              props.className
+            )}
+          >
+            {props.children}
+          </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

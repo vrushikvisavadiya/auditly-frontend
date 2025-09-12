@@ -1,35 +1,68 @@
+"use client";
+
 import Button from "@/components/Button";
 import { errorReportsBlueIcon, LinkIcon } from "./Icons";
 import IconTitle from "./IconTitle";
+import { useState, useEffect } from "react";
 
-export default function Section4() {
-  interface ErrorReport {
-    dateReported: string;
-    reportedBy: string;
-    error: string;
-    status: string;
+// API Types
+interface ErrorReport {
+  id: number;
+  timestamp: string;
+  details: string;
+  performed_by: {
+    id: string;
+    email: string;
+    name: string;
+  } | null;
+  activity_type: string;
+}
+
+// API Service Functions
+const getAuthHeaders = () => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+  return {
+    "Authorization": `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+};
+
+const fetchErrorReports = async (): Promise<ErrorReport[]> => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE}/activity/logs/?activity_type=ERROR_REPORT&page_size=5&ordering=-timestamp`,
+    {
+      method: "GET",
+      headers: getAuthHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  const data: ErrorReport[] = [
-    {
-      dateReported: "2024-10-01",
-      reportedBy: "Alice",
-      error: "Failed to generate policy",
-      status: "Open",
-    },
-    {
-      dateReported: "2024-10-02",
-      reportedBy: "Bob",
-      error: "Provider data mismatch",
-      status: "In Progress",
-    },
-    {
-      dateReported: "2024-10-03",
-      reportedBy: "Charlie",
-      error: "Unauthorized access attempt",
-      status: "Resolved",
-    },
-  ];
+  const data = await response.json();
+  return data.data || [];
+};
+
+export default function Section4() {
+  const [errorReports, setErrorReports] = useState<ErrorReport[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadErrorReports = async () => {
+      try {
+        const data = await fetchErrorReports();
+        setErrorReports(data);
+      } catch (error) {
+        console.error("Failed to load error reports:", error);
+        // Keep empty array on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadErrorReports();
+  }, []);
   return (
     <div className="flex flex-col gap-5">
       <IconTitle icon={errorReportsBlueIcon} title="Error Reports" />
@@ -44,14 +77,32 @@ export default function Section4() {
           </tr>
         </thead>
         <tbody>
-          {data.map((item, index) => (
-            <tr key={index}>
-              <td>{new Date(item.dateReported).toLocaleString()}</td>
-              <td>{item.reportedBy}</td>
-              <td>{item.error}</td>
-              <td>{item.status}</td>
+          {loading ? (
+            <tr>
+              <td colSpan={4} className="text-center py-4">
+                Loading...
+              </td>
             </tr>
-          ))}
+          ) : errorReports.length === 0 ? (
+            <tr>
+              <td colSpan={4} className="text-center py-4 text-gray-500">
+                No error reports
+              </td>
+            </tr>
+          ) : (
+            errorReports.map((item) => (
+              <tr key={item.id}>
+                <td>{new Date(item.timestamp).toLocaleString()}</td>
+                <td>{item.performed_by?.name || item.performed_by?.email || "System"}</td>
+                <td>{item.details}</td>
+                <td>
+                  <span className="px-2 py-1 rounded text-xs bg-red-100 text-red-800">
+                    Open
+                  </span>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
       <Button href="/admin/errors" iconRight={LinkIcon} className="self-end">

@@ -1,6 +1,26 @@
+"use client";
+
 import Button from "@/components/Button";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Clear all authentication data from localStorage
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("accessExpiresAt");
+    localStorage.removeItem("refreshExpiresAt");
+    localStorage.removeItem("user");
+    
+    // Clear cookies
+    document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    
+    // Redirect to login page
+    router.push("/login");
+  };
   return (
     <div className="navbar bg-[var(--auditly-dark-blue)]">
       <div className="flex-1 pl-4 flex items-center gap-2">
@@ -105,7 +125,10 @@ export default function Header() {
         </span>
       </div>
       <div className="flex-none">
-        <Button className="hover:bg-transparent btn-sm rounded-lg px-4 py-2 h-auto">
+        <Button 
+          className="hover:bg-transparent btn-sm rounded-lg px-4 py-2 h-auto"
+          onClick={handleLogout}
+        >
           <span className="[font-family:Poppins] text-sm font-semibold leading-[normal]">
             Logout
           </span>

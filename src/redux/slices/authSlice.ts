@@ -133,6 +133,10 @@ export const loginUser = createAsyncThunk(
           String(mapped.refreshExpiresAt)
         );
         localStorage.setItem("user", JSON.stringify(mapped.user));
+        
+        // Also set cookies for middleware access
+        document.cookie = `accessToken=${mapped.accessToken}; path=/; max-age=${7 * 24 * 60 * 60}`; // 7 days
+        document.cookie = `user=${JSON.stringify(mapped.user)}; path=/; max-age=${7 * 24 * 60 * 60}`; // 7 days
       }
 
       return mapped;

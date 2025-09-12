@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
 import ExternalLayout from "@/components/ExternalLayout";
@@ -13,10 +13,11 @@ import { fetchCurrentUser } from "@/src/redux/slices/userSlice";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { ROUTES } from "@/src/routes/constants";
+import { ROLES } from "@/src/constants/roles";
 
-// Zod schema for form validation
+// Validation schema
 const loginSchema = z.object({
   email: z
     .string()
@@ -27,19 +28,19 @@ const loginSchema = z.object({
         !["noemail@email.com", "abc@abc.com", "test@test.com"].includes(
           email.toLowerCase()
         ),
-      {
-        message: "Please enter a valid email address",
-      }
+      { message: "Please enter a valid email address" }
     ),
   password: z.string().min(1, "Password is required"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function Login() {
+function Login() {
   const inputClass = "auditly-input";
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
   const { status, error } = useAppSelector((s) => s.auth);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -62,11 +63,15 @@ export default function Login() {
           description={`Welcome back, ${res.payload.user.firstName}!`}
         />
       ));
-      // Fetch current user data immediately after login
+
       await dispatch(fetchCurrentUser());
 
       if (res?.payload.user?.mustChangePassword) {
-        router.push("/reset-password");
+        router.push(ROUTES.RESET_PASSWORD);
+      } else if (from) {
+        router.push(from);
+      } else if (res?.payload.user?.platformRole === ROLES.ADMIN) {
+        router.push(ROUTES.ADMIN.DASHBOARD);
       } else {
         router.push(ROUTES.ORGANIZATION);
       }
@@ -81,6 +86,7 @@ export default function Login() {
         className="flex flex-col gap-2.5 w-full"
         onSubmit={handleSubmit(onSubmit)}
       >
+        {/* Email */}
         <InputWrapper
           label="Email Address"
           errorMessage={errors.email?.message || ""}
@@ -94,6 +100,7 @@ export default function Login() {
           />
         </InputWrapper>
 
+        {/* Password */}
         <InputWrapper
           label="Password"
           errorMessage={errors.password?.message || ""}
@@ -130,12 +137,14 @@ export default function Login() {
           </div>
         </InputWrapper>
 
+        {/* Error */}
         {error && (
           <p className="text-red-600 text-sm mt-2" role="alert">
             {error}
           </p>
         )}
 
+        {/* Actions */}
         <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4 mt-4">
           <a
             href="/signup"
@@ -150,5 +159,13 @@ export default function Login() {
         </div>
       </form>
     </ExternalLayout>
+  );
+}
+
+export default function LoginSuspense() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Login />
+    </Suspense>
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   errorReportsIcon,
   newProviderIcon,
@@ -5,8 +7,89 @@ import {
   totalProviderIcon,
 } from "./Icons";
 import MetricCard from "./MetricCard";
+import { useState, useEffect } from "react";
+
+// API Types
+interface DashboardStats {
+  newProviders: number;
+  totalProviders: number;
+  policiesGenerated: number;
+  errorReports: number;
+}
+
+// API Service Functions
+const getAuthHeaders = () => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+  return {
+    "Authorization": `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+};
+
+const fetchDashboardStats = async (): Promise<DashboardStats> => {
+  // For now, we'll calculate stats from existing APIs
+  // In a real implementation, you'd have a dedicated dashboard stats endpoint
+  
+  // Fetch providers data
+  const providersResponse = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE}/accounts/signup-requests-list/`,
+    {
+      method: "GET",
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  const providersData = await providersResponse.json();
+  
+  // Fetch activity logs for recent activity count
+  const activityResponse = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE}/activity/logs/?page_size=1000`,
+    {
+      method: "GET",
+      headers: getAuthHeaders(),
+    }
+  );
+  
+  const activityData = await activityResponse.json();
+  
+  // Calculate stats
+  const totalProviders = providersData.count || 0;
+  const newProviders = providersData.data?.filter((p: any) => p.status === "PENDING").length || 0;
+  const policiesGenerated = activityData.data?.filter((a: any) => a.activity_type === "POLICY_CREATED").length || 0;
+  const errorReports = activityData.data?.filter((a: any) => a.activity_type === "ERROR_REPORT").length || 0;
+  
+  return {
+    newProviders,
+    totalProviders,
+    policiesGenerated,
+    errorReports,
+  };
+};
 
 export default function Section1() {
+  const [stats, setStats] = useState<DashboardStats>({
+    newProviders: 0,
+    totalProviders: 0,
+    policiesGenerated: 0,
+    errorReports: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const data = await fetchDashboardStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Failed to load dashboard stats:", error);
+        // Keep default values on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
+  }, []);
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col items-start">
@@ -27,25 +110,25 @@ export default function Section1() {
           <MetricCard
             icon={newProviderIcon}
             title="New Providers"
-            value="20"
+            value={loading ? "..." : stats.newProviders.toString()}
             change="20"
           />
           <MetricCard
             icon={totalProviderIcon}
             title="Total Providers"
-            value="152"
+            value={loading ? "..." : stats.totalProviders.toString()}
             change="20"
           />
           <MetricCard
             icon={policiesGeneratedIcon}
             title="Policies Generated"
-            value="234"
+            value={loading ? "..." : stats.policiesGenerated.toString()}
             change="20"
           />
           <MetricCard
             icon={errorReportsIcon}
             title="Error reports"
-            value="2"
+            value={loading ? "..." : stats.errorReports.toString()}
             change="20"
           />
         </div>

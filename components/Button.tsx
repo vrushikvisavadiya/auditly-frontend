@@ -10,7 +10,7 @@ export default function Button({
   children,
   iconRight,
   iconLeft,
-  className,
+  className = "",
   href,
   onClick,
   disabled,
@@ -37,17 +37,17 @@ export default function Button({
         {content}
       </a>
     );
-  } else {
-    return (
-      <button
-        className={buttonClassName}
-        onClick={onClick}
-        disabled={disabled}
-        type={type}
-        {...rest}
-      >
-        {content}
-      </button>
-    );
   }
+
+  return (
+    <button
+      className={buttonClassName}
+      onClick={onClick}
+      disabled={disabled}
+      type={type}
+      {...rest}
+    >
+      {content}
+    </button>
+  );
 }
