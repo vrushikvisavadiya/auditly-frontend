@@ -124,10 +124,12 @@ export const useMatchGroups = (): UseMatchGroupsReturn => {
       const matchedData = await organizationService.matchGroups(context);
 
       const transformedGroups: OptionType[] = matchedData.map(
-        (group: MatchedGroup, index: number) => ({
-          id: `matched-${index}`, // Use index since API doesn't return ID
-          name: `${group.number} - ${group.name}`,
-        })
+        (group: MatchedGroup, index: number) => {
+          return {
+            id: `${group.id}`,
+            name: `${group.number} - ${group.name}`,
+          };
+        }
       );
 
       setMatchedGroups(transformedGroups);

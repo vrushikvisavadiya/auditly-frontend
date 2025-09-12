@@ -19,6 +19,7 @@ export interface RegistrationGroup {
 export interface MatchedGroup {
   number: string;
   name: string;
+  id: number | string;
   audit_type: string;
 }
 

@@ -8,7 +8,7 @@ import CustomMultiSelect, {
 import LoadingDots from "@/components/ui/LoadingDots";
 import { useAppDispatch, useAppSelector } from "@/src/redux/hooks";
 import { completeStep, updateFormData } from "@/src/redux/slices/welcomeSlice";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Added useEffect
 import { motion, AnimatePresence } from "framer-motion";
 import {
   getSelectedRegistrationIds,
@@ -68,7 +68,7 @@ function PreviousQuestionSummary({ question }: { question: PreviousQuestion }) {
             type="button"
             disabled
             className={`px-4 py-2 rounded-lg font-semibold ${
-              question.answer === "Home Care"
+              question.answer === "HOME_CARE"
                 ? "bg-[var(--auditly-orange)] text-white"
                 : "bg-gray-200 text-gray-500"
             }`}
@@ -101,7 +101,14 @@ function PreviousQuestionSummary({ question }: { question: PreviousQuestion }) {
 
       {question.type === "suggestions" && question.answer && (
         <div className="flex flex-wrap gap-2">
-          {/* This will be populated dynamically from API */}
+          {question.answer.map((item: OptionType, index: number) => (
+            <div
+              key={index}
+              className="inline-flex items-center px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded-md"
+            >
+              {item.name}
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -128,6 +135,7 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
     error: matchingError,
     matchGroups,
   } = useMatchGroups();
+  console.log("matchedGroups: ", matchedGroups);
 
   const [data, setData] = useState<Step2FormData>({
     providerType: formData.providerType || "",
@@ -149,6 +157,13 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
   const [selectedGroups, setSelectedGroups] = useState<OptionType[]>(
     formData.registrationGroups || []
   );
+
+  // Effect to update selectedGroups when matchedGroups changes
+  useEffect(() => {
+    if (matchedGroups.length > 0 && currentQuestionIndex === 3) {
+      setSelectedGroups(matchedGroups);
+    }
+  }, [matchedGroups, currentQuestionIndex]);
 
   const questions = [
     {
@@ -194,9 +209,8 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
       if (currentQuestionIndex === 2 && data.businessDescription) {
         try {
           await matchGroups(data.businessDescription);
-          // Set matched groups as selected groups
+          // matchedGroups will be set by the useEffect above
           setTimeout(() => {
-            setSelectedGroups(matchedGroups);
             setIsLoading(false);
             setCurrentQuestionIndex(currentQuestionIndex + 1);
           }, 1500);
@@ -257,6 +271,8 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
   // Handle "Yes, looks good" - proceed to next step
   const handleConfirmSuggestions = () => {
     setShowSuggestionConfirmation(true);
+    // Ensure matchedGroups are set as selectedGroups
+    setSelectedGroups(matchedGroups);
     handleNext(); // Directly call handleNext instead of onNext
   };
 
@@ -274,6 +290,14 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
 
     console.log("State IDs for API:", stateIds);
     console.log("Registration Group IDs for API:", registrationGroupIds);
+
+    // Log the comma-separated IDs for matched groups scenario
+    if (showSuggestionConfirmation && matchedGroups.length > 0) {
+      const commaSeparatedIds = matchedGroups
+        .map((group) => group.id)
+        .join(",");
+      console.log("Matched Groups Comma Separated IDs:", commaSeparatedIds);
+    }
 
     try {
       dispatch(completeStep(2));
@@ -372,11 +396,6 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
             className="flex justify-center py-12"
           >
             <LoadingDots />
-            {/* {matchingLoading && (
-              <p className="ml-4 text-gray-600">
-                Analyzing your business description...
-              </p>
-            )} */}
           </motion.div>
         )}
       </AnimatePresence>
