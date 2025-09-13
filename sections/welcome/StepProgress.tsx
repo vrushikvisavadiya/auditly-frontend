@@ -483,7 +483,7 @@ export default function StepProgress() {
       {/* Loading Modal */}
       <LoadingModal
         id="onboarding-loading"
-        isOpen={true}
+        isOpen={showLoadingModal}
         progress={loadingProgress}
         total={5}
       />
