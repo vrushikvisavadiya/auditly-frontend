@@ -35,7 +35,7 @@ function DangerBackground(props: { children: React.ReactNode }) {
   );
 }
 
-function InfoBackground(props: { children: React.ReactNode }) {
+export function InfoBackground(props: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col p-4 justify-end items-center gap-2.5 self-stretch bg-[#D1ECF1] px-0">
       <div className="flex justify-center items-center [background:rgba(23,162,184,0.05)] shadow-[0_5px_4px_0_rgba(23,162,184,0.20)] p-5 rounded-full overflow-visible">

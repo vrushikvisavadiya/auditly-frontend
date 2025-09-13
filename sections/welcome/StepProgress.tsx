@@ -18,6 +18,8 @@ import Step5 from "./Step5";
 import Step6 from "./Step6";
 import LeaveOnboardingModal from "@/components/ui/LeaveOnboardingModal";
 import toast from "react-hot-toast";
+import LoadingModal from "@/components/ui/LoadingModal";
+import SuccessModal from "@/components/ui/SuccessModal";
 
 const steps = [
   {
@@ -61,6 +63,9 @@ export default function StepProgress() {
   const { formData } = useAppSelector((state) => state.welcome);
   const currentUser = useAppSelector(selectCurrentUser);
 
+  const [showLoadingModal, setShowLoadingModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -189,11 +194,22 @@ export default function StepProgress() {
   const handleCompleted = async () => {
     try {
       const finalData = collectAllFormData();
-
       const orgId = currentUser?.organization_id || "temp-org-id";
 
       console.log("Submitting onboarding data:", finalData);
       console.log("Organization ID:", orgId);
+
+      // Show loading modal
+      setShowLoadingModal(true);
+
+      // Simulate progress updates
+      setLoadingProgress(1);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setLoadingProgress(2);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setLoadingProgress(3);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setLoadingProgress(4);
 
       const result = await dispatch(
         submitOnboardingData({
@@ -202,21 +218,36 @@ export default function StepProgress() {
         })
       );
 
+      setLoadingProgress(5);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Hide loading modal
+      setShowLoadingModal(false);
+
       if (submitOnboardingData.fulfilled.match(result)) {
-        toast.success("Organization setup completed successfully!");
+        // Show success modal
+        setShowSuccessModal(true);
         setHasUnsavedChanges(false);
-        // setTimeout(() => {
-        //   router.push("/");
-        // }, 1500);
+
+        // Auto redirect after 3 seconds
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          router.push("/dashboard");
+        }, 3000);
       } else {
         toast.error((result.payload as string) || "Setup failed");
       }
     } catch (error) {
       console.error("Error submitting onboarding:", error);
+      setShowLoadingModal(false);
       toast.error("An error occurred during setup");
     }
   };
 
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    router.push("/dashboard");
+  };
   // Custom modal handlers (only for browser navigation)
   const handleLeaveAnyway = () => {
     setHasUnsavedChanges(false);
@@ -448,6 +479,23 @@ export default function StepProgress() {
 
       {/* Step Content */}
       <div className="bg-white">{renderStepContent()}</div>
+
+      {/* Loading Modal */}
+      <LoadingModal
+        id="onboarding-loading"
+        isOpen={true}
+        progress={loadingProgress}
+        total={5}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal
+        id="onboarding-success"
+        isOpen={showSuccessModal}
+        title="Woohoo! All set!"
+        message="We're preparing your policies. Please hang on for a moment."
+        onClose={handleSuccessModalClose}
+      />
 
       {/* Custom Leave Onboarding Modal - ONLY for browser navigation */}
       <LeaveOnboardingModal
