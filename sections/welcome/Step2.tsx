@@ -504,6 +504,32 @@ export default function Step2({ onNext, onPrev }: Step2Props) {
                         Home Care
                       </span>
                     </label>
+
+                    <label
+                      className={`flex items-center p-4 border-2 border-gray-200 rounded-lg transition-colors ${
+                        areInputsDisabled
+                          ? "cursor-not-allowed opacity-60"
+                          : "cursor-pointer hover:border-[var(--auditly-orange)]"
+                      }`}
+                    >
+                      <div className="relative">
+                        <input
+                          type="radio"
+                          name="providerType"
+                          value="BOTH"
+                          checked={data.providerType === "BOTH"}
+                          onChange={() => handleProviderTypeChange("BOTH")}
+                          disabled={areInputsDisabled}
+                          className="sr-only peer"
+                        />
+                        <div className="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[var(--auditly-orange)] peer-checked:bg-[var(--auditly-orange)] flex items-center justify-center transition-colors">
+                          <div className="w-2 h-2 rounded-full bg-white opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                        </div>
+                      </div>
+                      <span className="ml-3 text-lg font-medium text-gray-700">
+                        BOTH
+                      </span>
+                    </label>
                   </div>
 
                   {isCurrentQuestionValid() && !areInputsDisabled && (

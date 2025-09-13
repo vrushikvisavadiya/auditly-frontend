@@ -1,7 +1,5 @@
-import React from "react";
+import PolicyGuideListLayout from "@/sections/policy-guide/PolicyGuideListLayout";
 
-const page = () => {
-  return <div>page</div>;
-};
-
-export default page;
+export default function PolicyGuidePage() {
+  return <PolicyGuideListLayout />;
+}
